@@ -18,6 +18,8 @@ const logStartup = (protocol: Protocol) => {
   db.connectDb();
 };
 
+
+
 let server: http.Server | https.Server | null = null;
 
 if (process.env.SSL_KEY_FILE && process.env.SSL_CERT_FILE) {
