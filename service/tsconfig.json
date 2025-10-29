@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {  
+      "outDir": "dist/types",
+      "target": "ES5",    
+      "strict": true,
+      "esModuleInterop": true,
+      "sourceMap": true,
+      "noImplicitAny": false,
+      "declaration": true,
+      "strictNullChecks": false,
+      "downlevelIteration": true,
+      "lib": ["es5", "es6", "dom"],
+    }
+}
