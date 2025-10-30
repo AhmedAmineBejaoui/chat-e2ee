@@ -30,12 +30,30 @@ type emitDataTypes = {
   [key: string]: unknown,
 }
 
+const parseAllowedOrigins = (): (string | RegExp)[] => {
+  const raw = process.env.CLIENT_ORIGIN || "";
+  return raw
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+};
+
 export const initSocket = (server) => {
   if (io) {
     return io;
   }
 
-  io = new Server(server, { allowEIO3: true });
+  const allowedOrigins = parseAllowedOrigins();
+
+  io = new Server(server, {
+    allowEIO3: true,
+    transports: ["websocket", "polling"],
+    cors: {
+      origin: allowedOrigins.length > 0 ? allowedOrigins : "*",
+      methods: ["GET", "POST", "OPTIONS"],
+      credentials: true
+    }
+  });
   // eslint-disable-next-line no-console
   console.log("Websocket is up!");
 

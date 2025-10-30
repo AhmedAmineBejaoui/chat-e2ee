@@ -1,4 +1,4 @@
-import socketIOClient, { Socket } from 'socket.io-client';
+import socketIOClient, { Socket, ManagerOptions, SocketOptions } from 'socket.io-client';
 import { Logger } from '../utils/logger';
 import { chatJoinPayloadType } from '../sdk';
 import { configContext } from '../configContext';
@@ -27,7 +27,16 @@ export class SocketInstance {
 
     private eventHandlerLogger = this.logger.createChild('eventHandlerLogger');
     constructor(private subscriptionContext: () => SubscriptionType, private logger: Logger) {
-        this.socket = socketIOClient(`${getBaseURL()}/`);
+        const baseURL = getBaseURL().replace(/\/$/, '');
+        const transports = ["websocket", "polling"];
+        const socketOptions: Partial<ManagerOptions & SocketOptions> = {
+            transports,
+            withCredentials: true,
+            secure: baseURL ? baseURL.startsWith("https://") : typeof window !== "undefined" ? window.location.protocol === "https:" : false,
+        };
+        this.socket = baseURL
+            ? socketIOClient(`${baseURL}/`, socketOptions)
+            : socketIOClient(socketOptions);
         this.socket.on(SOCKET_LISTENERS.LIMIT_REACHED, (...args) => this.handler(SOCKET_LISTENERS.LIMIT_REACHED, args));
         this.socket.on(SOCKET_LISTENERS.DELIVERED, (...args) => this.handler(SOCKET_LISTENERS.DELIVERED, args));
         this.socket.on(SOCKET_LISTENERS.ON_ALICE_JOIN, (...args) => this.handler(SOCKET_LISTENERS.ON_ALICE_JOIN, args));
