@@ -8,7 +8,7 @@ import app from './app';
 import db from './backend/db';
 import { initSocket } from './backend/socket.io';
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 type Protocol = "http" | "https";
 
@@ -29,7 +29,7 @@ if (process.env.SSL_KEY_FILE && process.env.SSL_CERT_FILE) {
     const key = fs.readFileSync(keyPath);
     const cert = fs.readFileSync(certPath);
     const httpsServer = https.createServer({ key, cert }, app);
-    httpsServer.listen(PORT, () => logStartup("https"));
+    httpsServer.listen(PORT, "0.0.0.0", () => logStartup("https"));
     server = httpsServer;
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -38,7 +38,7 @@ if (process.env.SSL_KEY_FILE && process.env.SSL_CERT_FILE) {
 }
 
 if (!server) {
-  server = app.listen(PORT, () => logStartup("http"));
+  server = app.listen(PORT, "0.0.0.0", () => logStartup("http"));
 }
 
 initSocket(server);

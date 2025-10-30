@@ -38,6 +38,10 @@ app.use((req, res, next) => {
 // add routes
 app.use("/api", apiController);
 
+app.get("/", (_req, res) => {
+  res.send("✅ Server is running");
+});
+
 if (process.env.NODE_ENV === "production") {
   app.use(express.static("client/build"));
   app.get("*", (req, res) => {
