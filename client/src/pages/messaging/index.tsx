@@ -25,19 +25,22 @@ const buildDefaultServerURL = () => {
   return `${protocol}//${formattedHost}:3001`;
 };
 
-const devServer = process.env.REACT_APP_SERVER_URL || buildDefaultServerURL();
+const resolveServerURL = () => {
+  if (process.env.REACT_APP_SERVER_URL) {
+    return process.env.REACT_APP_SERVER_URL;
+  }
+  if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'development') {
+    return `${window.location.protocol}//${window.location.hostname}`;
+  }
+  return buildDefaultServerURL();
+};
 
-if (process.env.NODE_ENV === 'development') {
-  setConfig({
-    apiURL: devServer,
-    socketURL: devServer,
-  });
-} else {
+const serverURL = resolveServerURL().replace(/\/$/, '');
+
 setConfig({
-    apiURL: `${window.location.protocol}//${window.location.hostname}` ,
-    socketURL: `${window.location.protocol}//${window.location.hostname}`  ,
-  })
-}
+  apiURL: serverURL,
+  socketURL: serverURL,
+});
 
 const chate2ee = createChatInstance();
 type messageObj = {
