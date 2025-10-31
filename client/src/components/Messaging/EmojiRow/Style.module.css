@@ -1,18 +1,30 @@
 .emojiRow {
-  font-size: 18px;
-  resize: none;
+  font-size: 22px;
   flex: 1;
-  border: 0;
-  height: 200px;
+  border: none;
+  max-height: 260px;
   box-sizing: border-box;
   outline: none;
-  padding: 5px 5px;
+  padding: 10px 14px;
   user-select: none;
   scroll-behavior: smooth;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 10px;
+  color: #d8faff;
+}
+
+.emojiRow::-webkit-scrollbar {
+  width: 6px;
+}
+
+.emojiRow::-webkit-scrollbar-thumb {
+  background: rgba(98, 165, 255, 0.55);
+  border-radius: 10px;
 }
 
 .lightEmojiRow {
-  background: #f2f2f2;
+  background: rgba(240, 245, 255, 0.92);
 }

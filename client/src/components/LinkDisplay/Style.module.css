@@ -1,97 +1,133 @@
 .copyToClipboardContainer {
-  color: #fff;
+  color: #e4faff;
   display: flex;
-  padding: 2px;
+  padding: 12px;
   flex: 1;
-  border-radius: 5px;
-  margin-top: 20px;
+  border-radius: 18px;
+  margin-top: 24px;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   text-align: center;
-  padding-left: 10px;
-  border: 1px solid #121212;
-  background: #121212;
+  border: 1px solid rgba(95, 194, 255, 0.25);
+  background: linear-gradient(120deg, rgba(6, 18, 46, 0.85), rgba(15, 39, 88, 0.72));
   position: relative;
+  gap: 16px;
+  box-shadow: 0 18px 40px rgba(12, 32, 78, 0.48);
 }
 
 .lightModeContainer {
-  border: 1px solid #f2f2f2;
-  background: #f2f2f2;
-}
-
-.linkTextArea {
-  width: 100%;
-  border-width: 0px;
-  font-size: 18px;
-  outline: none;
-  resize: none;
-  box-sizing: border-box;
-  padding-left: 10px;
-  font-family: monospace;
-  background: #121212;
-  color: #aeaeae;
-}
-
-.lightTextArea {
-  background: #f2f2f2;
-  color: #000000;
-}
-
-.copyButton {
-  border-width: 1px;
-  font-family: inherit;
-  font-size: 18px;
-  width: 50px;
-  height: 40px;
-  border-radius: 5px;
-  cursor: pointer;
-  outline: none;
-  border-color: #434343;
-  background: #434343;
-  color: #aeaeae;
-}
-
-.lightModeButton {
-  border-color: #e2e2e2;
-  background: #e2e2e2;
-  color: #000000;
-}
-
-.linkIcon {
-  font-size: 20px;
-  color: #aeaeae;
-}
-
-.copyIcon {
-  font-size: '15px';
-  transform: translateY(2px);
+  border: 1px solid rgba(132, 166, 255, 0.24);
+  background: rgba(245, 248, 255, 0.92);
+  color: #091739;
+  box-shadow: 0 16px 38px rgba(97, 135, 255, 0.28);
 }
 
 .textAreaContainer {
   flex: 1;
+  position: relative;
+}
+
+.labelLinkTextArea {
+  display: block;
+  position: absolute;
+  top: -14px;
+  left: 12px;
+  font-size: 12px;
+  letter-spacing: 1.8px;
+  color: rgba(180, 238, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.linkTextArea {
+  width: 100%;
+  border: none;
+  font-size: 18px;
+  outline: none;
+  resize: none;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  font-family: 'Space Grotesk', monospace;
+  background: rgba(4, 17, 40, 0.85);
+  color: #bff6ff;
+  border-radius: 14px;
+  border: 1px solid rgba(99, 204, 255, 0.22);
+  box-shadow: inset 0 0 24px rgba(6, 23, 58, 0.65);
+  min-height: 82px;
+}
+
+.lightTextArea {
+  background: rgba(255, 255, 255, 0.96);
+  color: #172447;
+  border: 1px solid rgba(128, 168, 255, 0.34);
+  box-shadow: inset 0 0 20px rgba(128, 168, 255, 0.28);
+}
+
+.linkIcon {
+  font-size: 22px;
+  color: rgba(125, 251, 255, 0.78);
+  filter: drop-shadow(0 0 6px rgba(125, 251, 255, 0.6));
+}
+
+.copyIcon {
+  font-size: 16px;
+  transform: translateY(2px);
+}
+
+.copyButton,
+.qrButton {
+  border: 1px solid rgba(128, 255, 239, 0.35);
+  font-family: 'Space Grotesk', inherit;
+  font-size: 15px;
+  min-width: 120px;
+  height: 48px;
+  border-radius: 14px;
+  cursor: pointer;
+  outline: none;
+  background: linear-gradient(130deg, rgba(0, 242, 255, 0.78), rgba(114, 50, 255, 0.78));
+  color: #06122d;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+}
+
+.copyButton:hover,
+.qrButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(0, 247, 255, 0.32);
+}
+
+.lightModeButton {
+  background: linear-gradient(130deg, rgba(129, 175, 255, 0.85), rgba(73, 252, 213, 0.85));
+  color: #0a1734;
 }
 
 .openLink {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 16px;
 }
+
 .openLink a {
   text-decoration: none;
   display: inline-block;
-  border: 1px solid #434343;
-  padding: 5px 10px;
-  border-radius: 4px;
-  transition: 180ms;
-  font-size: 12px;
-}
-.darkOpenLink a:hover {
-  color: #fff !important;
-  border-color: #fff;
+  border: 1px solid rgba(124, 241, 255, 0.4);
+  padding: 8px 18px;
+  border-radius: 12px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  font-size: 13px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #7dfbff !important;
+  background: rgba(8, 19, 46, 0.7);
 }
 
-.lightOpenLink a:hover {
-  color: #aeaeae !important;
-  border-color: #aeaeae;
+.openLink a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 38px rgba(0, 225, 255, 0.28);
 }
 
 .fullWidth {
@@ -99,82 +135,62 @@
 }
 
 .pinDisplay {
-  margin-top: 50px;
+  margin: 40px 0;
   text-align: center;
-  margin-bottom: 50px;
 }
 
 .pinDisplayMsg {
-  font-size: 12px;
+  font-size: 14px;
+  letter-spacing: 1.2px;
+  color: rgba(191, 244, 255, 0.75);
+  text-transform: uppercase;
 }
 
 .pinValidMsg {
-  font-size: 11px;
-  margin-bottom: 15px;
-}
-
-.labelLinkTextArea {
-  display: block;
-  position: absolute;
-  top: -20px;
-  left: 0px;
-  font-size: small;
-  color: #aeaeae;
+  font-size: 12px;
+  margin-bottom: 20px;
+  letter-spacing: 1.4px;
+  color: rgba(141, 215, 255, 0.58);
 }
 
 .qrCodeContainer {
-  margin-top: 20px;
+  margin-top: 26px;
   display: flex;
   justify-content: center;
 }
 
-.qrButton {
-  border-width: 1px;
-  font-family: inherit;
-  font-size: 18px;
-  width: 50px;
-  height: 40px;
-  border-radius: 5px;
-  cursor: pointer;
-  outline: none;
-  border-color: #4bb2f9;
-  background: #4bb2f9;
-  color: white;
-  margin-left: 5px;
-  transform: translateY(2px);
-}
-
-.qrButton:hover {
-  background-color: #0056b3; 
-}
-
-.QrCodeContent{
+.QrCodeContent {
   display: flex;
   align-items: baseline;
   justify-content: center;
+  gap: 12px;
 }
 
 .qrIcon {
   display: inline-block;
   margin-top: 0;
-  transform: none;
+  transform: translateY(2px);
 }
 
 @media screen and (min-width: 640px) {
   .fullWidth {
     display: flex;
     flex-flow: wrap;
+    gap: 18px;
   }
+
   .fullWidth > div {
     flex: 1 auto;
   }
+
   .pinDisplay {
     margin: 0;
   }
+
   .pinDisplayMsg {
     width: 100%;
-    font-size: 18px;
-    padding-bottom: 20px;
+    font-size: 16px;
+    padding-bottom: 16px;
   }
 
   .openLink {
@@ -183,21 +199,8 @@
   }
 
   .divider {
-    margin: 30px 0;
-    border-top: 1px solid #434343;
+    margin: 32px 0;
+    border-top: 1px solid rgba(125, 251, 255, 0.25);
     width: 100%;
-  }
-
-  .copyButton {
-    width: 125px;
-  }
-
-  .qrButton {
-    width: 125px;
-    transform: none;
-  }
-
-  .qrIcon {
-    transform: translateY(2px);
   }
 }

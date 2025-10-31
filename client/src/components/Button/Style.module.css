@@ -1,37 +1,78 @@
 .button {
-  padding: 6px 20px;
-  display: inline-block;
-  border-radius: 3px;
-  border-color: transparent;
+  padding: 14px 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 16px;
+  border: 1px solid transparent;
   font-size: 16px;
-  opacity: 1;
-  font-family: inherit;
-  transition: 180ms;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  background: linear-gradient(120deg, rgba(106, 0, 255, 0.85), rgba(0, 255, 235, 0.78));
+  color: #faffff;
+  box-shadow: 0 12px 30px rgba(0, 243, 255, 0.22);
+  font-family: 'Space Grotesk', inherit;
+}
+
+.button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.button:hover::before {
+  opacity: 0.6;
+}
+
+.button:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 16px 36px rgba(0, 226, 255, 0.28);
+  border-color: rgba(125, 251, 255, 0.45);
+}
+
+.button:active {
+  transform: translateY(1px) scale(0.99);
 }
 
 .disabled {
   pointer-events: none;
-  background: transparent;
-  border: 1px solid #434343;
-  color: #434343;
+  background: rgba(41, 68, 96, 0.36);
+  border: 1px dashed rgba(136, 185, 207, 0.4);
+  color: rgba(207, 230, 255, 0.4);
+  box-shadow: none;
 }
 
 .darkMode {
-  background: #434343;
-  color: #fff;
+  background: linear-gradient(135deg, rgba(45, 44, 107, 0.9), rgba(0, 224, 255, 0.4));
+  color: #f5feff;
 }
 
 .lightMode {
-  background: #3cb043;
-  color: #fff;
+  background: linear-gradient(135deg, rgba(86, 120, 255, 0.9), rgba(135, 255, 238, 0.7));
+  color: #0b1321;
 }
 
 .primary {
-  background: #e91e63;
+  background: linear-gradient(125deg, rgba(254, 28, 114, 0.92), rgba(110, 66, 255, 0.88));
   color: #fff;
+  box-shadow: 0 18px 42px rgba(236, 0, 255, 0.25);
 }
-/* 
+
+.primary:hover {
+  box-shadow: 0 22px 48px rgba(255, 43, 137, 0.35);
+}
+
 .secondary {
-  
-} */
+  background: linear-gradient(135deg, rgba(23, 58, 135, 0.82), rgba(6, 193, 255, 0.78));
+  color: #f7feff;
+}

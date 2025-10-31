@@ -1,4 +1,7 @@
-html, body {
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -6,45 +9,90 @@ html, body {
 }
 
 body {
-  font-family: monospace;
+  font-family: 'Space Grotesk', 'Segoe UI', Monaco, monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
+  position: relative;
+  background: radial-gradient(circle at 20% 20%, rgba(0, 216, 255, 0.24), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(162, 87, 255, 0.18), transparent 55%),
+    linear-gradient(135deg, #05050f 0%, #090b1a 45%, #04060c 100%);
 }
 
-body {
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
-}
-body::-webkit-scrollbar { 
-  display: none;  /* Safari and Chrome */
-}
-
-.defaultMode {
-  background: #121212;
-  color: #aeaeae;
-  height: 100%;
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='rgba(0,255,255,0.06)' stroke-width='0.5'%3E%3Cpath d='M0 50h100M50 0v100'/%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.7;
+  animation: driftGrid 18s linear infinite;
 }
 
-.bodyContent {
-  max-width: 800px;
-  margin: auto;
-  height: 98%;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
-}
-
-@media screen and (max-width: 640px) {
-  .section--default {
-    border-radius: 0px;
+@keyframes driftGrid {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  to {
+    transform: translate3d(-50px, -80px, 0) scale(1.05);
   }
 }
 
+body {
+  -ms-overflow-style: none; /* IE 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+body::-webkit-scrollbar {
+  display: none; /* Safari & Chrome */
+}
+
+.defaultMode {
+  color: #d7f9ff;
+  min-height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(18px);
+}
+
+.bodyContent {
+  width: min(92%, 1080px);
+  margin: 30px auto;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+code {
+  font-family: 'Fira Code', 'Source Code Pro', Menlo, Monaco, Consolas, 'Courier New', monospace;
+  background: rgba(9, 17, 34, 0.7);
+  padding: 2px 6px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 12px rgba(0, 255, 255, 0.08);
+}
+
 a {
-  color: inherit !important;
+  color: #7dfbff !important;
+  text-decoration: none;
+  position: relative;
+}
+
+a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #0ff, rgba(125, 251, 255, 0));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.24s ease-out;
+}
+
+a:hover::after {
+  transform: scaleX(1);
 }
 
 .fullWidth {
@@ -52,24 +100,33 @@ a {
 }
 
 .lightMode {
-  background: #f2f2f2;
-  color: #000000;
+  background: linear-gradient(120deg, #f7fbff 0%, #e9f0ff 60%, #f5f7ff 100%);
+  color: #0a1633;
+}
+
+@media only screen and (max-width: 1200px) {
+  .bodyContent {
+    width: min(94%, 960px);
+  }
 }
 
 @media only screen and (max-width: 900px) {
   .bodyContent {
-    max-width: 700px;
+    width: min(96%, 820px);
+    margin: 24px auto;
   }
 }
 
-@media only screen and (max-width: 800px) {
+@media only screen and (max-width: 700px) {
   .bodyContent {
-    max-width: 600px;
+    width: 92%;
+    margin: 18px auto;
   }
 }
 
-@media only screen and (max-width: 640px) {
+@media only screen and (max-width: 540px) {
   .bodyContent {
-    max-width: 95%;
+    width: 90%;
+    margin: 16px auto 40px auto;
   }
 }

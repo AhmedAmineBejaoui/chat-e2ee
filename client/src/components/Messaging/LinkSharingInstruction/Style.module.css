@@ -1,66 +1,88 @@
 .linkSharingInstruction {
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   word-break: break-all;
+  color: rgba(199, 239, 255, 0.75);
+  letter-spacing: 1.1px;
 }
 
 .linkText {
-  margin-top: 12px;
-  font-family: monospace;
-  /* font-size: 18px; */
-  background: transparent;
-  color: #cecece;
-  border: 1px dotted #aeaeae;
-  width: 400px;
-  padding: 10px 15px;
+  margin-top: 14px;
+  font-family: 'Space Grotesk', monospace;
+  background: rgba(3, 18, 46, 0.78);
+  color: #d7fdff;
+  border: 1px solid rgba(125, 251, 255, 0.28);
+  width: min(420px, 100%);
+  padding: 14px 18px;
   box-sizing: border-box;
-  border-radius: 4px;
+  border-radius: 14px;
   outline: none;
+  box-shadow: 0 14px 32px rgba(4, 25, 62, 0.45);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.linkText:focus {
+  border-color: rgba(125, 251, 255, 0.6);
+  box-shadow: 0 18px 42px rgba(0, 220, 255, 0.32);
 }
 
 .linkText::selection {
-  background-color: #fff;
-  color: #111;
+  background-color: rgba(125, 251, 255, 0.8);
+  color: #051329;
 }
 
 .lightlinkText {
-  color: #111;
-  border: 1px dotted #111;
+  color: #12234c;
+  background: rgba(245, 248, 255, 0.94);
+  border: 1px solid rgba(129, 169, 255, 0.32);
+  box-shadow: 0 14px 32px rgba(120, 164, 255, 0.3);
 }
 
 .linkPin {
-  margin-top: 12px;
-  font-family: monospace;
-  background: transparent;
-  color: #cecece;
-  border: 1px dotted #aeaeae;
-  width: 125px;
-  padding: 10px 15px;
+  margin-top: 16px;
+  font-family: 'Fira Code', monospace;
+  background: rgba(6, 20, 52, 0.85);
+  color: #affcff;
+  border: 1px solid rgba(108, 217, 255, 0.38);
+  width: 150px;
+  padding: 12px 18px;
   box-sizing: border-box;
-  border-radius: 4px;
+  border-radius: 14px;
   outline: none;
-  font-size: 22px;
-  letter-spacing: 14px;
+  font-size: 20px;
+  letter-spacing: 18px;
   text-align: center;
+  text-transform: uppercase;
+  box-shadow: 0 16px 30px rgba(12, 40, 88, 0.45);
 }
 
 .linkPin::selection {
-  background-color: #fff;
-  color: #111;
+  background-color: rgba(125, 251, 255, 0.85);
+  color: #04132b;
 }
 
 .lightlinkPin {
-  color: #111;
-  border: 1px dotted #111;
+  color: #0f1b3d;
+  border: 1px solid rgba(132, 169, 255, 0.42);
+  background: rgba(248, 251, 255, 0.94);
 }
 
 .linkPinHdr {
-  margin-top: 25px;
+  margin-top: 26px;
+  font-size: 13px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: rgba(162, 236, 255, 0.76);
 }
 
 @media screen and (max-width: 640px) {
   .linkText {
-    padding: 5px 10px;
     width: 100%;
+    padding: 12px 14px;
+  }
+
+  .linkPin {
+    width: 100%;
+    letter-spacing: 14px;
   }
 }

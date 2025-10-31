@@ -22,7 +22,9 @@ const Button = (props: ButtonProps) => {
         disabled === true ? styles.disabled : darkMode === true ? styles.darkMode : styles.lightMode
       } 
       `}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      role="button"
+      aria-disabled={disabled}
     >
       {label}
     </div>

@@ -1,13 +1,20 @@
 .toggleIcon {
-  font-size: 24px;
-  padding-top: 5px;
+  font-size: 28px;
+  padding-top: 4px;
   cursor: pointer;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 0 8px rgba(125, 251, 255, 0.4));
+}
+
+.toggleIcon:hover {
+  transform: scale(1.12) rotate(6deg);
+  filter: drop-shadow(0 0 12px rgba(125, 251, 255, 0.65));
 }
 
 .FiMoon {
-  color: #231709;
+  color: #19294d;
 }
 
 .FiSun {
-  color: #4bb2f9;
+  color: #80fdf9;
 }

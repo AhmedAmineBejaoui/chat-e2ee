@@ -39,7 +39,10 @@ const App = () => {
           className={`${styles.header}
           ${darkMode === true ? styles.darkModeHeader : styles.lightModeHeader}`}
         >
-          🔐 Disposable e2ee-chat
+          <span role="img" aria-label="secured chat">
+            🔐
+          </span>{" "}
+          HoloLink &mdash; disposable e2ee chat
           <ThemeToggle />
         </div>
         <div className={`${styles.sectionDefault} ${!darkMode && styles.sectionDefaultLight}`}>

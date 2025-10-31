@@ -1,63 +1,96 @@
 .callStatusBar {
-    position: fixed;
-    background: #4caf50;
-    width: 100%;
-    left: 0;
-    padding: 2px;
-    font-size: 12px;
-    color: white;
-    bottom: 0;
+  position: fixed;
+  background: linear-gradient(135deg, rgba(0, 236, 188, 0.85), rgba(27, 124, 255, 0.85));
+  width: 100%;
+  left: 0;
+  padding: 8px 18px;
+  font-size: 12px;
+  color: #02121b;
+  bottom: 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 600;
+  box-shadow: 0 -10px 24px rgba(0, 214, 255, 0.18);
 }
+
 .userInfo {
-  padding: 15px 0px 15px 0px;
-  font-weight: 400;
+  padding: 18px 0;
+  font-weight: 500;
   display: flex;
-  flex-direction: row;
-  grid-column-gap: 15px;
   align-items: center;
+  gap: 18px;
 }
+
 .userInfoOnline {
-  color: #4caf50;
+  color: #8cfff1;
   flex: 1;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2.4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.userInfoOnline::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #54ffcf;
+  box-shadow: 0 0 8px rgba(84, 255, 207, 0.9);
 }
 
 @media screen and (max-width: 640px) {
   .userInfo {
-    padding-left: 15px;
-    padding-right: 15px;
+    padding: 16px 10px;
+    flex-wrap: wrap;
+  }
+  .userInfoOnline {
+    width: 100%;
   }
 }
 
 .FiMoon {
-  color: #231709;
+  color: #172447;
 }
 
 .FiSun {
-  color: #4bb2f9;
+  color: #79faff;
 }
 
 .userOnlineWaiting {
   display: flex;
   align-items: center;
   flex: 1;
+  color: rgba(208, 239, 255, 0.65);
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  font-size: 12px;
 }
 
 .retryImageIcon {
   width: 20px;
   height: auto;
-  margin-left: 5px;
+  margin-left: 8px;
   cursor: pointer;
+  filter: drop-shadow(0 0 6px rgba(125, 251, 255, 0.45));
+  transition: transform 0.4s ease;
+}
+
+.retryImageIcon:hover {
+  transform: rotate(180deg) scale(1.1);
 }
 
 .loading {
-  animation: spin 5000ms linear infinite;
+  animation: spin 1600ms linear infinite;
 }
 
 @keyframes spin {
   from {
-    transform: rotate(360deg);
+    transform: rotate(0deg);
   }
   to {
-    transform: rotate(0deg);
+    transform: rotate(360deg);
   }
 }

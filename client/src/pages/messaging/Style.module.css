@@ -1,26 +1,51 @@
 .messageContainer {
-  /* height fallback */
   height: calc(100% - 68px);
   display: flex;
   flex-direction: column;
+  gap: 26px;
+  position: relative;
 }
+
 .messageBlock {
-  padding: 20px;
-  background: #212121;
-  box-shadow: 4px 3px 10px #121212;
-  border-radius: 5px;
+  padding: clamp(20px, 3vw, 32px);
+  background: linear-gradient(140deg, rgba(12, 20, 42, 0.92), rgba(8, 10, 22, 0.88));
+  border-radius: 28px;
+  border: 1px solid rgba(128, 255, 246, 0.14);
+  box-shadow: 0 22px 50px rgba(8, 16, 40, 0.55);
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+.messageBlock::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at top right, rgba(0, 255, 224, 0.16), transparent 55%);
+  opacity: 0.65;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .lightModeContainer {
-  background: #e3e3e3;
-  box-shadow: 4px 3px 10px #eeeeee;
+  background: rgba(248, 251, 255, 0.9);
+  border: 1px solid rgba(110, 162, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(84, 115, 255, 0.25);
 }
 
-@media screen and (max-width: 640px) {
+@media (max-width: 720px) {
   .messageBlock {
-    border-radius: 0px;
+    border-radius: 22px;
+    padding: 20px 18px;
+  }
+}
+
+@media (max-width: 540px) {
+  .messageBlock {
+    border-radius: 18px;
+    padding: 18px 16px;
   }
 }

@@ -6,6 +6,7 @@ const clients = getClientInstance();
 const connectionListener = (socket: CustomSocket, io) => {
   socket.on("chat-join", async (data) => {
     const { userID, channelID, publicKey } = data;
+    console.log("[socket.io] chat-join", { channelID, userID });
 
     const { valid } = await channelValid(channelID);
     if (!valid) {
@@ -23,6 +24,8 @@ const connectionListener = (socket: CustomSocket, io) => {
     }
 
     clients.setClientToChannel(userID, channelID, socket.id);
+    socket.join(channelID);
+    console.log("[socket.io] clients in channel", channelID, Object.keys(clients.getClientsByChannel(channelID) || {}));
     socket.channelID = channelID;
     socket.userID = userID;
     // share the public key to the receiver if present
@@ -44,6 +47,7 @@ const connectionListener = (socket: CustomSocket, io) => {
       return;
     }
     try {
+      console.log("[socket.io] disconnect", { channelID, userID });
       const receiver = clients.getSIDByIDs(userID, channelID);
       if (receiver) {
         clients.deleteClient(userID, channelID);

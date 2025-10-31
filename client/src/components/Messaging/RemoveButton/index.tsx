@@ -4,7 +4,7 @@ import { IoMdCloseCircleOutline } from "react-icons/io";
 import { ThemeContext } from "../../../ThemeContext";
 
 type ButtonProps = {
-  onClick: React.MouseEventHandler<HTMLButtonElement> | React.MouseEventHandler<SVGElement>;
+  onClick: React.MouseEventHandler<HTMLDivElement>;
 };
 
 const RemoveButton = ({ onClick }: ButtonProps) => {
@@ -13,11 +13,11 @@ const RemoveButton = ({ onClick }: ButtonProps) => {
     <div
       className={`${styles.removeButtonContainer} 
     ${darkMode === true ? styles.darkMode : styles.lightMode}`}
+      onClick={onClick}
+      role="button"
+      aria-label="Remove selected image"
     >
-      <IoMdCloseCircleOutline
-        className={styles.checkmark}
-        onClick={onClick as React.MouseEventHandler<SVGElement>}
-      />
+      <IoMdCloseCircleOutline className={styles.checkmark} />
     </div>
   );
 };

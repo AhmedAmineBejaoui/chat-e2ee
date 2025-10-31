@@ -35,7 +35,14 @@ export const getUserSessionID = (channelID: string): string | null => {
   return sessionMap[channelID] || null;
 };
 
-export const createUserSessionID = (channelID: string): string => `${channelID}-${Date.now()}`;
+const generateUniqueId = (): string => {
+  if (typeof window !== "undefined" && window.crypto && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+  return `uid-${Math.random().toString(36).slice(2)}-${Date.now()}`;
+};
+
+export const createUserSessionID = (channelID: string): string => `${channelID}-${generateUniqueId()}`;
 
 export const storeUserSessionID = (channelID: string, userId: string): void => {
   const sessionMap = migrateLegacyEntry();
