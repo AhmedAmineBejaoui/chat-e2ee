@@ -148,16 +148,20 @@ class Peer {
 
         this.pc.ontrack = (event) => {
             const [stream] = event.streams;
+            this.logger.log(`ontrack event: ${event.track.kind}, streams: ${event.streams.length}`);
             if (!stream) {
+                this.logger.log('No stream in ontrack event');
                 return;
             }
             if(event.track.kind === 'video') {
                 this.logger.log('Adding remote video track');
-                this.applyDecryption('video', event.receiver);
+                // Note: Decryption disabled for better compatibility
+                // this.applyDecryption('video', event.receiver);
                 this.appendVideoStreamToDom(stream, 'webrtc-video-remote');
             } else if(event.track.kind === 'audio') {
                 this.logger.log('Adding remote audio track');
-                this.applyDecryption('audio', event.receiver);
+                // Note: Decryption disabled for better compatibility  
+                // this.applyDecryption('audio', event.receiver);
                 this.appendAudioStreamToDom(stream);
             }
         };
@@ -236,8 +240,10 @@ class Peer {
         this.logger.log(`acquireLocalStream, video: ${withVideo}`);
         this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: withVideo });
         this.localStream.getTracks().forEach(track => {
+            this.logger.log(`Adding local track: ${track.kind}`);
             this.pc.addTrack(track, this.localStream);
-            this.applyEncryption(track.kind as 'audio' | 'video');
+            // Note: Encryption disabled for better compatibility
+            // this.applyEncryption(track.kind as 'audio' | 'video');
         });
         if (withVideo) {
             this.appendVideoStreamToDom(this.localStream, 'webrtc-video-local', true);
@@ -245,25 +251,34 @@ class Peer {
     }
 
     private async appendAudioStreamToDom(stream: MediaStream): Promise<void> {
-        this.logger.log('Adding remote audio track');
+        this.logger.log('appendAudioStreamToDom called');
         if(!this.audioEl) {
             this.audioEl = document.createElement('audio');
-            this.audioEl.setAttribute('autoplay', 'true');
-            this.audioEl.setAttribute('playsinline', 'true');
+            this.audioEl.autoplay = true;
+            this.audioEl.playsInline = true;
+            this.audioEl.volume = 1.0;
         }
         this.audioEl.srcObject = stream;
+        this.logger.log(`Audio element created, stream tracks: ${stream.getAudioTracks().length}`);
+
+        // Mount first to ensure element is in DOM
+        this.mountElement(this.audioEl, 'webrtc-audio-mount');
 
         try {
             await this.audioEl.play();
-        }catch(err) {
-            this.logger.log(err);
-            this.audioEl.setAttribute('controls', 'true');
-            setTimeout(() => {
-                this.logger.log('Scheduling delay play');
-                this.audioEl?.play();
-            }, 1000)
+            this.logger.log('Audio playback started successfully');
+        } catch(err) {
+            this.logger.log('Audio autoplay failed, adding controls:', err);
+            this.audioEl.controls = true;
+            // Try again with user gesture fallback
+            const playOnClick = () => {
+                this.audioEl?.play().then(() => {
+                    this.logger.log('Audio started after user interaction');
+                }).catch(e => this.logger.log('Still failed:', e));
+                document.removeEventListener('click', playOnClick);
+            };
+            document.addEventListener('click', playOnClick, { once: true });
         }
-        this.mountElement(this.audioEl, 'webrtc-audio-mount');
     }
 
     private appendVideoStreamToDom(stream: MediaStream, mountId: string, isLocal = false): void {
