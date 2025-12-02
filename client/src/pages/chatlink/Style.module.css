@@ -46,11 +46,19 @@
   letter-spacing: 0.6px;
 }
 
+.titleLight {
+  color: #1c2a4f;
+}
+
 .description {
   color: rgba(214, 246, 255, 0.68);
   margin-top: 24px;
   font-size: 15px;
   line-height: 1.8;
+}
+
+.descriptionLight {
+  color: rgba(17, 30, 70, 0.78);
 }
 
 .captchaHeightSetter {

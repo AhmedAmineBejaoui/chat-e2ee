@@ -1,32 +1,45 @@
-.callStatusBar {
-  position: fixed;
-  background: linear-gradient(135deg, rgba(0, 236, 188, 0.85), rgba(27, 124, 255, 0.85));
-  width: 100%;
-  left: 0;
-  padding: 8px 18px;
-  font-size: 12px;
-  color: #02121b;
-  bottom: 0;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-weight: 600;
-  box-shadow: 0 -10px 24px rgba(0, 214, 255, 0.18);
-}
-
 .userInfo {
-  padding: 18px 0;
-  font-weight: 500;
+  padding: 0;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
+  color: inherit;
+  justify-content: space-between;
 }
 
 .userInfoOnline {
-  color: #8cfff1;
+  color: #e9fef3;
   flex: 1;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 2.4px;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contactBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.contactName {
+  font-size: 16px;
+  color: #111b21;
+  font-weight: 700;
+}
+
+.contactStatus {
+  font-size: 12px;
+  color: #54656f;
+}
+
+.online {
+  color: #25d366;
+}
+
+.headerActions {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -34,16 +47,24 @@
 
 .userInfoOnline::before {
   content: "";
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #54ffcf;
-  box-shadow: 0 0 8px rgba(84, 255, 207, 0.9);
+  background: #25d366;
+  box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.2);
+}
+
+.userInfoOnlineLight {
+  color: #0b1a13;
+}
+
+.userInfoOnlineLight::before {
+  background: #25d366;
+  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.2);
 }
 
 @media screen and (max-width: 640px) {
   .userInfo {
-    padding: 16px 10px;
     flex-wrap: wrap;
   }
   .userInfoOnline {
@@ -63,18 +84,21 @@
   display: flex;
   align-items: center;
   flex: 1;
-  color: rgba(208, 239, 255, 0.65);
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.4px;
+  font-size: 13px;
+}
+
+.userOnlineWaitingLight {
+  color: #0b1a13;
 }
 
 .retryImageIcon {
-  width: 20px;
+  width: 18px;
   height: auto;
   margin-left: 8px;
   cursor: pointer;
-  filter: drop-shadow(0 0 6px rgba(125, 251, 255, 0.45));
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.2));
   transition: transform 0.4s ease;
 }
 

@@ -18,7 +18,9 @@ describe('cryptoUtils', () => {
     // It takes as its arguments a key to encrypt with, some algorithm-specific parameters, and the data to encrypt (also known as "plaintext").
     // Returns a promise that fulfills with an ArrayBuffer containing the "ciphertext".
     encrypt: jest.fn().mockImplementation((algorithm, publicKey, encoded) => encoded),
-    decrypt: jest.fn().mockImplementation((algorithm, privateKey, ciphertext) => ciphertext)
+    decrypt: jest.fn().mockImplementation((algorithm, privateKey, ciphertext) => ciphertext),
+    sign: jest.fn().mockImplementation((algorithm, privateKey, encoded) => encoded),
+    verify: jest.fn().mockImplementation((algorithm, publicKey, signature, encoded) => true)
   };
 
   // Receives a Uint8Array to encode to base-64 
@@ -60,7 +62,7 @@ describe('cryptoUtils', () => {
       const { publicKey } = await cryptoUtils.generateKeypairs();
       const ciphertext = await cryptoUtils.encryptMessage(plaintext, publicKey);
 
-      expect(window.crypto.subtle.importKey).toHaveBeenCalledWith('jwk', expect.any(String), { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['encrypt']);
+      expect(window.crypto.subtle.importKey).toHaveBeenCalledWith('jwk', expect.any(String), { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['decrypt']);
       expect(window.btoa).toHaveBeenCalledWith(expect.any(String));
       expect(ciphertext).toBe('ZW5jcnlwdGVkLXRleHQ=');
     });
@@ -76,6 +78,19 @@ describe('cryptoUtils', () => {
       expect(window.crypto.subtle.importKey).toHaveBeenCalledWith('jwk', expect.any(String), { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['encrypt']);
       expect(window.atob).toHaveBeenCalledWith(expect.any(String));
       expect(decryptedText).toBe("This is another message");
+    });
+  });
+
+  describe('signMessage & verifySignature', () => {
+    it('should sign a plaintext and verify the signature', async () => {
+      const plaintext = 'Sign me';
+      const keyPair = await cryptoUtils.generateSigningKeypairs();
+      const signature = await cryptoUtils.signMessage(plaintext, keyPair.privateKey);
+      const isValid = await cryptoUtils.verifySignature(plaintext, signature, keyPair.publicKey);
+
+      expect(window.crypto.subtle.importKey).toHaveBeenCalledWith('jwk', expect.any(String), { name: 'RSA-PSS', hash: 'SHA-256' }, true, ['verify']);
+      expect(signature).toBe(mockBase64String);
+      expect(isValid).toBe(true);
     });
   });
 });

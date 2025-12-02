@@ -2,10 +2,14 @@ import { AesGcmEncryption } from "./cryptoAES";
 import { Logger } from "./utils/logger";
 import { webrtcSession } from "./webrtcSession";
 
+export type CallMode = 'audio' | 'video';
+export type CallOptions = { withVideo?: boolean };
+
 export interface IE2ECall {
-    on(event: callEvents, cb: () => void): void;
+    on(event: callEvents, cb: (state: RTCPeerConnectionState) => void): void;
     state: RTCPeerConnectionState;
     endCall(): Promise<void>;
+    mode: CallMode;
 }
 
 interface SignalData {
@@ -19,6 +23,7 @@ export const peerConnectionEvents: PeerConnectionEventType[] = [ "call-added", "
 export class WebRTCCall { 
     private peer: Peer;
     private subs: Map<callEvents, Set<Function>> = new Map()
+    private currentMode: CallMode = 'audio';
 
     public static isSupported(): boolean {
         return  !!(RTCRtpSender.prototype as any).createEncodedStreams;
@@ -51,9 +56,14 @@ export class WebRTCCall {
         return this.peer.callState;
     }
 
-    async startCall(): Promise<void> {
+    public get mode(): CallMode {
+        return this.currentMode;
+    }
+
+    async startCall(options: CallOptions = {}): Promise<void> {
         this.logger.log('startCall');
-        return this.peer.createAndSendOffer();
+        this.currentMode = options.withVideo ? 'video' : 'audio';
+        return this.peer.createAndSendOffer(options);
     }
 
     public endCall(): void {
@@ -63,12 +73,21 @@ export class WebRTCCall {
         this.peer = null;
     }
 
+    private descriptionContainsVideo(desc: SignalData): boolean {
+        return typeof desc?.sdp === 'string' && /\nm=video/.test(desc.sdp);
+    }
+
     public signal(data: SignalData): void {
         this.logger.log('handling signal data');
         if(!this.peer) {
-            throw new Error('No peer connection');
+            this.logger.log('signal() called without active peer, skipping.');
+            return;
         }
-        this.peer.signal(data);
+        const offerHasVideo = data.type === 'offer' && this.descriptionContainsVideo(data);
+        if(offerHasVideo) {
+            this.currentMode = 'video';
+        }
+        this.peer.signal(data, { withVideo: offerHasVideo });
     }
 }
 
@@ -77,9 +96,11 @@ class Peer {
     private pc: RTCPeerConnection;
 
     private audioEl?: HTMLAudioElement;
-    private audioStream?: MediaStream;
-
-    private localStreamAcquisatonPromise?: Promise<void>
+    private remoteVideoEl?: HTMLVideoElement;
+    private localVideoEl?: HTMLVideoElement;
+    private localStream?: MediaStream;
+    private localStreamPromise?: Promise<void>;
+    private localOptions: CallOptions = { withVideo: false };
     constructor(
         private subCtx: () => Map<callEvents, Set<Function>>,
         private encryption: AesGcmEncryption, 
@@ -126,25 +147,31 @@ class Peer {
         };
 
         this.pc.ontrack = (event) => {
-            event.streams[0].getAudioTracks().forEach(() => {
+            const [stream] = event.streams;
+            if (!stream) {
+                return;
+            }
+            if(event.track.kind === 'video') {
+                this.logger.log('Adding remote video track');
+                this.applyDecryption('video', event.receiver);
+                this.appendVideoStreamToDom(stream, 'webrtc-video-remote');
+            } else if(event.track.kind === 'audio') {
                 this.logger.log('Adding remote audio track');
                 this.applyDecryption('audio', event.receiver);
-                this.appendAudioStreamToDom(event.streams[0], 'remote');    
-            })
+                this.appendAudioStreamToDom(stream);
+            }
         };
 
         this.state = this.pc.connectionState;
-        this.localStreamAcquisatonPromise = this.addLocalAudioTracks();
     }
 
     public get callState(): RTCPeerConnectionState {
         return this.state;
     }
 
-    public async createAndSendOffer() {
-        await this.localStreamAcquisatonPromise;
+    public async createAndSendOffer(options: CallOptions = {}) {
+        await this.ensureLocalStream(options);
         this.logger.log('createAndSendOffer');
-        // await this.addLocalAudioTracks();
         const offer = await this.pc.createOffer();
         await this.pc.setLocalDescription(offer);
         await webrtcSession({ 
@@ -156,9 +183,9 @@ class Peer {
     }
 
 
-    public async signal(data: SignalData) {
+    public async signal(data: SignalData, options: CallOptions = {}) {
         if (data.type === 'offer') {
-            await this.localStreamAcquisatonPromise;
+            await this.ensureLocalStream(options);
             this.logger.log('Signal, offer');
             await this.pc.setRemoteDescription(new RTCSessionDescription(data));
             const answer = await this.pc.createAnswer();
@@ -179,54 +206,51 @@ class Peer {
     }
 
     public dispose(): void {
-        if(this.audioStream) {
-            this.audioStream.getTracks().forEach(track => {
-                track.stop() ;
-            });
-            this.audioStream = null;
+        if(this.localStream) {
+            this.localStream.getTracks().forEach(track => track.stop());
+            this.localStream = null;
         }
-        if(this.audioEl) {
-            this.audioEl.srcObject = null;
-            this.audioEl = null;
-        }
+        this.cleanupMediaElement(this.audioEl);
+        this.audioEl = null;
+        this.cleanupMediaElement(this.localVideoEl);
+        this.localVideoEl = null;
+        this.cleanupMediaElement(this.remoteVideoEl);
+        this.remoteVideoEl = null;
+        this.localStreamPromise = undefined;
         this.logger.log('Dispose');
         this.pc?.close();
         this.pc = null;
     }
-
-    private async addLocalAudioTracks(): Promise<void> {
-        this.logger.log('addLocalAudioTracks, adding local track to Peer Connection');
-        this.audioStream = await this.getAudioStream();
-        this.audioStream.getTracks().forEach(track => this.pc.addTrack(track, this.audioStream));
-        this.applyEncryption('audio');
+    
+    private async ensureLocalStream(options: CallOptions = {}): Promise<void> {
+        if (this.localStreamPromise) {
+            return this.localStreamPromise;
+        }
+        const useVideo = !!options.withVideo;
+        this.localOptions = { withVideo: useVideo };
+        this.localStreamPromise = this.acquireLocalStream(useVideo);
+        return this.localStreamPromise;
     }
 
-    /*
-    private async addLocalVideoTracks(): Promise<void> {
-        this.logger.log('addLocalTracks');
-        // const stream = await this.getAudioStream();
-        const stream = await this.getVideoStream();
-        this.appenVideoStreamToDom(stream, 'local');
-        stream.getTracks().forEach(track => this.pc.addTrack(track, stream));
-        this.applyEncryption('video');
-    }
-    */
-
-    private async getAudioStream(): Promise<MediaStream> {
-        this.logger.log('getAudioStream');
-        return navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    private async acquireLocalStream(withVideo: boolean): Promise<void> {
+        this.logger.log(`acquireLocalStream, video: ${withVideo}`);
+        this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: withVideo });
+        this.localStream.getTracks().forEach(track => {
+            this.pc.addTrack(track, this.localStream);
+            this.applyEncryption(track.kind as 'audio' | 'video');
+        });
+        if (withVideo) {
+            this.appendVideoStreamToDom(this.localStream, 'webrtc-video-local', true);
+        }
     }
 
-    private async getVideoStream(): Promise<MediaStream> {
-        this.logger.log('getAudioStream');
-        return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    }
-
-    private async appendAudioStreamToDom(stream: MediaStream, tag: string): Promise<void> {
+    private async appendAudioStreamToDom(stream: MediaStream): Promise<void> {
         this.logger.log('Adding remote audio track');
-        this.audioEl = document.createElement('audio');
-        this.audioEl.setAttribute('autoplay', 'true');
-        this.audioEl.setAttribute('id', tag);
+        if(!this.audioEl) {
+            this.audioEl = document.createElement('audio');
+            this.audioEl.setAttribute('autoplay', 'true');
+            this.audioEl.setAttribute('playsinline', 'true');
+        }
         this.audioEl.srcObject = stream;
 
         try {
@@ -236,20 +260,52 @@ class Peer {
             this.audioEl.setAttribute('controls', 'true');
             setTimeout(() => {
                 this.logger.log('Scheduling delay play');
-                this.audioEl.play();
+                this.audioEl?.play();
             }, 1000)
         }
-        document.body.appendChild(this.audioEl);
+        this.mountElement(this.audioEl, 'webrtc-audio-mount');
     }
 
-    private appenVideoStreamToDom(stream: MediaStream, tag: string): void {
-        this.logger.log('Adding remote video track');
-        const videoEl = document.createElement('video');
-        document.body.appendChild(videoEl);
-        videoEl.setAttribute('controls', 'true');
+    private appendVideoStreamToDom(stream: MediaStream, mountId: string, isLocal = false): void {
+        const videoEl = isLocal
+            ? (this.localVideoEl ||= document.createElement('video'))
+            : (this.remoteVideoEl ||= document.createElement('video'));
         videoEl.setAttribute('autoplay', 'true');
-        videoEl.setAttribute('id', tag);
-        videoEl.srcObject = stream
+        videoEl.setAttribute('playsinline', 'true');
+        if(isLocal) {
+            videoEl.setAttribute('muted', 'true');
+            videoEl.muted = true;
+        } else {
+            videoEl.removeAttribute('muted');
+            videoEl.muted = false;
+        }
+        videoEl.srcObject = stream;
+        this.mountElement(videoEl, mountId);
+    }
+
+    private mountElement(el: HTMLElement, mountId: string): void {
+        const mount = document.getElementById(mountId);
+        if (mount) {
+            mount.innerHTML = '';
+            mount.appendChild(el);
+        } else {
+            document.body.appendChild(el);
+        }
+    }
+
+    private cleanupMediaElement(el?: HTMLMediaElement): void {
+        if (!el) {
+            return;
+        }
+        try {
+            el.pause?.();
+        } catch (err) {
+            this.logger.log(err);
+        }
+        el.srcObject = null;
+        if (el.parentElement) {
+            el.parentElement.removeChild(el);
+        }
     }
 
     private applyDecryption(mediaType: 'audio' | 'video', receiver: RTCRtpReceiver): void {
@@ -306,11 +362,14 @@ class Peer {
 // Public facing class
 export class E2ECall implements IE2ECall {
     constructor(private readonly webRtcCall: WebRTCCall) {}
-    public on(event: callEvents, cb: () => void): void {
+    public on(event: callEvents, cb: (state: RTCPeerConnectionState) => void): void {
         this.webRtcCall.on(event, cb);
     }
     public get state(): RTCPeerConnectionState {
         return this.webRtcCall.callState;
+    }
+    public get mode(): CallMode {
+        return this.webRtcCall.mode;
     }
     public async endCall(): Promise<void> {
         return this.webRtcCall.endCall();

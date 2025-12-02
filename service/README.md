@@ -15,8 +15,10 @@ npm i @chat-e2ee/service
  - createChatInstance - core chat ops.
  - utils
    - generateUUID - util func to generate UUID.  
-   - decryptMessage - to decrypt encrypted messages.  
+   - signMessage / verifySignature - RSA-PSS helpers to sign or verify payloads.
+   - generateSigningKeypairs - helper to get RSA-PSS keys for signatures.
  - setConfig - configuration - set URLs i.e. API endpoints, debugging etc.
+ - chatInstance.decryptMessage - decrypt AES-encrypted chat payloads using the negotiated session key.
 
 ### Example and flow:  
 #### 1. Import and initialize the SDK:
@@ -43,15 +45,14 @@ Note that userid should be unique.
 #### 3. Send a message:
 When both users have joined the channel, you are ready to send a message. 
 ```
-await chatInstance.encrypt('some message').send();
+await chatInstance.encrypt({ text: 'some message' }).send();
 ```
 
 #### 4. Receive messages:
-Setup listener to receive messages from user2 and use your private key to decrypt messages.
+Setup listener to receive messages from user2 and decrypt with the session AES key negotiated by the SDK.
 ```
-const { privateKey } = chatInstance.getKeyPair();
 chatInstance.on('chat-message', async () => {
-    const msgInPlainText = await utils.decryptMessage(msg.message, privateKey);
+    const msgInPlainText = await chatInstance.decryptMessage(msg.message);
     console.log(msgInPlainText);
 });
 ```

@@ -14,8 +14,9 @@ Demo: https://chat-e2ee-2.azurewebsites.net
 ## Features
 
 1. :negative_squared_cross_mark: No login/signup - the end users **don't identify** themselves.
-2. :closed_lock_with_key:	End-to-end encrypted Audio-Call  (Experimental - added on [19th September, 2024](https://github.com/muke1908/chat-e2ee/commit/efae545c4c378dd7cae3c133843c1d58fded8a56)).  
-:warning: Note that Audio encryption in webrtc call is done diffrently, please refer [Wiki](https://github.com/muke1908/chat-e2ee/wiki/End%E2%80%90to%E2%80%90end-encryption-in-Webrtc-audio-call). It internally uses RTCRtpSender API: `createEncodedStreams` that has [limited Support](https://caniuse.com/mdn-api_rtcrtpsender_createencodedstreams)
+2. :closed_lock_with_key:	End-to-end encrypted Audio / Video Call (Experimental - audio added on [19th September, 2024](https://github.com/muke1908/chat-e2ee/commit/efae545c4c378dd7cae3c133843c1d58fded8a56), UI controls + video option added now).  
+:warning: Note that audio/video encryption in WebRTC call is done differently, please refer [Wiki](https://github.com/muke1908/chat-e2ee/wiki/End%E2%80%90to%E2%80%90end-encryption-in-Webrtc-audio-call). It internally uses RTCRtpSender API: `createEncodedStreams` that has [limited Support](https://caniuse.com/mdn-api_rtcrtpsender_createencodedstreams)
+3. :microphone: Voice snippets - record a short voice message in the browser, it gets encrypted like any other payload and is streamed as `/uploads/audio/...` from your server for the peer to play.
 4. :no_entry_sign: Data is **not** stored on any remote server, encrypted data is just relayed to other users, the data can't be decrypted by any man in the middle. **No history** i.e. once chat is closed the data is not recoverable, however encrypted data can be found on memory trace. [Read More](https://github.com/muke1908/chat-e2ee/wiki/How-and-when-your-data-can-be-compromised%3F)  
 
 ## :star: JS SDK 
@@ -41,10 +42,10 @@ For installation instruction, go to [developer section](https://github.com/muke1
 
 **How the encryption works**
 
-1. Alice and Bob generate a public and private key pair.
-2. Alice and Bob share their public keys with each other.
-3. Alice encrypts her message with Bob's public key and sends it to Bob.
-4. Bob receives the encrypted message and decrypts it with his private key.
+1. Alice and Bob generate a public/private key pair and a fresh AES-256 key in the browser.
+2. Alice and Bob exchange their public keys and AES keys over the signalling channel.
+3. Chat messages are encrypted with AES-GCM using the peer's AES key before being sent.
+4. The receiver decrypts the payload locally with the exchanged AES key.
 
 In this way, no one else can decrypt the message because your private key is never exposed/shared to the internet.
 More detailed explanation: https://www.youtube.com/watch?v=GSIDS_lvRv4&t=1s
@@ -89,6 +90,17 @@ NOTE: by default, `create-react-app` runs webpack-dev-server on port `3000`. The
 **Important:**  
 Check `.env.sample` to configure your `.env` file.  
 Please use node 16 or above.   
+
+Media uploads introduce a few optional server knobs (all have sane defaults):
+- `MAX_JSON_PAYLOAD` increases the JSON/body-parser limit so encrypted blobs or large attachments are not truncated.
+- `SOCKET_MAX_PAYLOAD_BYTES` mirrors the same limit on socket.io payloads to keep binary messages flowing.
+- `PUBLIC_SERVER_URL` lets the API build absolute URLs for `/uploads/audio/*` when your server runs behind a proxy/CDN.
+Uploaded voice clips live under `uploads/audio` (git-ignored) and are exposed read-only via `/uploads/audio/...`.
+
+Security hardening toggles:
+- `ENFORCE_HTTPS=true` forces HTTPS redirects and sets HSTS (`HSTS_MAX_AGE`).
+- `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` enable API rate limiting to curb abuse.
+- Client key material cached locally is encrypted with an in-memory AES key per session (falls back to non-cached if crypto is unavailable).
 
 #### Local HTTPS dev server
 

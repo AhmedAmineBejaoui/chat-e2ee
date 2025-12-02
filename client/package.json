@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@chat-e2ee/service": "^1.5.0",
+    "@chat-e2ee/service": "file:../service",
+    "lucide-react": "^0.554.0",
     "ngrok": "^5.0.0-beta.2",
     "qrcode.react": "^4.0.1",
     "react": "^18.3.1",
@@ -13,6 +14,7 @@
     "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.5.2",
@@ -21,23 +23,27 @@
     "@types/react": "^18.3.8",
     "@types/react-dom": "^18.3.0",
     "@types/react-router-dom": "^5.3.3",
+    "autoprefixer": "^10.4.22",
     "cross-env": "^10.1.0",
     "eslint-plugin-jsx-a11y": "^6.10.0",
     "eslint-plugin-promise": "7.1.0",
     "eslint-plugin-react": "7.36.1",
     "eslint-plugin-react-hooks": "^4.6.2",
     "html-webpack-plugin": "^5.6.0",
+    "patch-package": "^8.0.1",
+    "postcss": "^8.5.6",
     "react-scripts": "^5.0.1",
+    "tailwindcss": "^4.1.17",
     "typescript": "^4.9.5",
     "typescript-plugin-css-modules": "^5.1.0"
   },
-  
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "start-https": "cross-env HTTPS=true HOST=localhost SSL_CRT_FILE=certs/devcert.pem SSL_KEY_FILE=certs/devkey.pem react-scripts start"
+    "start-https": "cross-env HTTPS=true HOST=localhost SSL_CRT_FILE=certs/devcert.pem SSL_KEY_FILE=certs/devkey.pem react-scripts start",
+    "postinstall": "patch-package"
   },
   "eslintConfig": {
     "extends": "react-app"

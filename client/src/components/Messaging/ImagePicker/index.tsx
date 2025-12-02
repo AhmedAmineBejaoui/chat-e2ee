@@ -1,14 +1,12 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import imagePicker from "../../../utils/imagePicker";
-import { ThemeContext } from "../../../ThemeContext";
-import imagePickerIcon from "./assets/image-picker.png";
-import imagePickerIconDark from "./assets/image-picker-black.png";
 import Image from "../../Image/index";
-import styles from "./Style.module.css";
+import { Image as ImageIcon } from "lucide-react";
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // ~5MB to avoid huge payloads
 
 const ImagePicker = (props: any) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [darkMode] = useContext(ThemeContext);
   const { selectedImg, setSelectedImg, setText, previewImg, setPreviewImg } = props;
 
   const handleShowDialog = (e: any) => {
@@ -17,45 +15,57 @@ const ImagePicker = (props: any) => {
   };
 
   const selectImage = async (e: any) => {
-    // maintain the property reference after event callback in order to clean up
     e.persist();
-    const { base64: imgUrl, fileName } = await imagePicker(e);
-    if (imgUrl) {
-      setPreviewImg(true);
-      setSelectedImg(imgUrl);
-      setText(fileName);
+    const file = e.target.files?.[0];
+    if (file && file.size > MAX_IMAGE_BYTES) {
+      alert(`Selected image is too large. Please keep attachments under ${Math.round(MAX_IMAGE_BYTES / (1024 * 1024))}MB.`);
+      e.target.value = "";
+      return;
     }
-    // clean up the targeted HTML element to render
-    // else html sense no change and not render if you choose same image after cancelation once
-    e.target.value = "";
+    try {
+      const { base64: imgUrl, fileName } = await imagePicker(e);
+      if (imgUrl) {
+        setPreviewImg(true);
+        setSelectedImg(imgUrl);
+        setText(fileName);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.message || err || "Unable to process this image. Please use a PNG/JPG under 4MB.");
+    } finally {
+      e.target.value = "";
+    }
   };
 
   return (
-    <div className={styles.imagePickerContainer}>
-      <label className={styles.imagePickerLabel}>
+    <div className="relative flex items-center">
+      <label className="cursor-pointer text-holo-text-secondary hover:text-holo-cyan transition-colors">
         <input
-          className={styles.inputImagePicker}
+          className="hidden"
           type="file"
           accept="image/png, image/jpeg"
           onChange={selectImage}
         />
         {previewImg ? (
           <div>
-            <span onClick={handleShowDialog}>
-              <Image src={selectedImg} maxWidth="45px" maxHeight="auto" />
+            <span onClick={handleShowDialog} className="block w-8 h-8 rounded overflow-hidden border border-holo-border">
+              <Image src={selectedImg} maxWidth="100%" maxHeight="100%" />
             </span>
             {isOpen && (
-              <dialog className={styles.dialog} open onClick={handleShowDialog}>
-                <img className={styles.dialogContent} src={selectedImg} alt="file-zoom" />
-              </dialog>
+              <div 
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+                onClick={handleShowDialog}
+              >
+                <img 
+                  className="max-w-full max-h-full rounded-lg shadow-2xl" 
+                  src={selectedImg} 
+                  alt="file-zoom" 
+                />
+              </div>
             )}
           </div>
         ) : (
-          <img
-            className={styles.imagePickerIcon}
-            src={darkMode ? imagePickerIcon : imagePickerIconDark}
-            alt="file-upload"
-          />
+          <ImageIcon className="w-5 h-5" />
         )}
       </label>
     </div>

@@ -19,16 +19,16 @@
   bottom: 15%;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(130deg, rgba(21, 44, 98, 0.95), rgba(0, 255, 224, 0.82));
+  background: linear-gradient(135deg, rgba(0, 201, 213, 0.9), rgba(6, 25, 46, 0.94));
   font-weight: 600;
-  color: #e7fcff;
+  color: #e8f6ff;
   padding: 12px 26px;
   border-radius: 14px;
-  box-shadow: 0 20px 40px rgba(0, 227, 255, 0.28);
+  box-shadow: 0 22px 48px rgba(0, 201, 213, 0.3), 0 16px 40px rgba(0, 0, 0, 0.45);
   cursor: pointer;
   z-index: 9999;
   transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
-  border: 1px solid rgba(125, 251, 255, 0.4);
+  border: 1px solid rgba(0, 201, 213, 0.5);
   letter-spacing: 1px;
 }
 

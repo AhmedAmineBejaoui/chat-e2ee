@@ -1,5 +1,5 @@
 import { SocketListenerType } from "../socket/socket";
-import { E2ECall, PeerConnectionEventType } from "../webrtc";
+import { E2ECall, PeerConnectionEventType, CallMode } from "../webrtc";
 
 export type LinkObjType = {
     hash: string,
@@ -23,18 +23,22 @@ export interface IChatE2EE {
     setChannel(channelId: string, userId: string, userName?: string): void;
     delete(): Promise<void>;
     getUsersInChannel(): Promise<TypeUsersInChannel>;
-    sendMessage(args: { image: string, text: string }): Promise<ISendMessageReturn>;
+    sendMessage(args: { image?: string, audio?: string, text: string }): Promise<ISendMessageReturn>;
     dispose(): void;
-    encrypt({ image, text }): { send: () => Promise<ISendMessageReturn> };
+    encrypt({ image, audio, text }: { image?: string; audio?: string; text: string }): { send: () => Promise<ISendMessageReturn> };
+    decryptMessage(ciphertext: string): Promise<string>;
     on(listener: SocketListenerType | PeerConnectionEventType, callback: (...args: any) => void): void;
     // webrtc call 
-    startCall(): Promise<E2ECall>;
+    startCall(options?: { withVideo?: boolean }): Promise<E2ECall>;
     endCall(): void;
     activeCall: E2ECall | null
 }
 
 export interface IUtils {
     decryptMessage(ciphertext: string, privateKey: string): Promise<string>,
+    signMessage(plaintext: string, privateKey: string): Promise<string>,
+    verifySignature(plaintext: string, signature: string, publicKey: string): Promise<boolean>,
+    generateSigningKeypairs(): Promise<{ privateKey: string, publicKey: string }>,
     generateUUID(): string,
 }
 
@@ -46,4 +50,3 @@ export type configType = {
     }
 }
 export type SetConfigType = (config: Partial<configType>) => void;
-

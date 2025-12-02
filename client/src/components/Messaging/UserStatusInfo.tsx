@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import styles from "./styles/UserStatusInfo.module.css";
 import ThemeToggle from "../ThemeToggle/index";
 import imageRetryIcon from "./assets/image-retry.png";
 import DeleteChatLink from "../DeleteChatLink";
 import { IChatE2EE } from "@chat-e2ee/service";
+import { ThemeContext } from "../../ThemeContext";
 
 export const UserStatusInfo = ({
   online,
@@ -19,6 +20,7 @@ export const UserStatusInfo = ({
   chate2ee: IChatE2EE;
 }) => {
   const [loading, setLoading] = useState(false);
+  const [darkMode] = useContext(ThemeContext);
 
   const fetchKeyAgain = async () => {
     if (loading) return;
@@ -31,25 +33,35 @@ export const UserStatusInfo = ({
   return (
     <>
       <div className={styles.userInfo}>
-        {online ? (
-          <span className={styles.userInfoOnline}>
-            {"<"}Online{">"}
-          </span>
-        ) : (
-          <div className={styles.userOnlineWaiting}>
-            Waiting for Alice to join...
-            <img
-              className={
-                loading ? `${styles.retryImageIcon} ${styles.loading}` : `${styles.retryImageIcon}`
-              }
-              src={imageRetryIcon}
-              onClick={fetchKeyAgain}
-              alt="retry-icon"
-            />
+        <div className={styles.contactBlock}>
+          <div className={styles.avatarDot}></div>
+          <div>
+            <div className={styles.contactName}>Contact</div>
+            {online ? (
+              <div className={`${styles.contactStatus} ${styles.online}`}>online</div>
+            ) : (
+              <div
+                className={`${styles.userOnlineWaiting} ${
+                  !darkMode && styles.userOnlineWaitingLight
+                }`}
+              >
+                Waiting to join...
+                <img
+                  className={
+                    loading ? `${styles.retryImageIcon} ${styles.loading}` : `${styles.retryImageIcon}`
+                  }
+                  src={imageRetryIcon}
+                  onClick={fetchKeyAgain}
+                  alt="retry-icon"
+                />
+              </div>
+            )}
           </div>
-        )}
-        <DeleteChatLink handleDeleteLink={handleDeleteLink} />
-        <ThemeToggle />
+        </div>
+        <div className={styles.headerActions}>
+          <DeleteChatLink handleDeleteLink={handleDeleteLink} />
+          <ThemeToggle />
+        </div>
       </div>
     </>
   );

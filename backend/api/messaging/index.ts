@@ -16,10 +16,10 @@ const clients = getClientInstance();
 router.post(
   "/message",
   asyncHandler(async (req: Request, res: Response): Promise<Response<MessageResponse>> => {
-    const { message, sender, channel, image } = req.body;
+    const { message, sender, channel, image, audio } = req.body;
 
-    if (!message) {
-      return res.send(400);
+    if (!message && !image && !audio) {
+      return res.status(400).send({ message: "Message content missing" });
     }
     const { valid } = await channelValid(channel);
 
@@ -45,14 +45,16 @@ router.post(
       sender,
       message,
       id,
-      timestamp
+      timestamp,
+      ...(image ? { image } : {}),
+      ...(audio ? { audio } : {})
     };
-
-    if (image) {
-      return res.status(400).send({ message: "Image not supported" });
+    const receiverClient = clients.getSIDByIDs(receiver, channel);
+    if (!receiverClient?.sid) {
+      console.error('Receiver socket not found', { channel, receiver });
+      return res.status(503).send({ message: "Receiver is not connected" });
     }
-    const receiverSid = clients.getSIDByIDs(receiver, channel).sid;
-    socketEmit<SOCKET_TOPIC.CHAT_MESSAGE>(SOCKET_TOPIC.CHAT_MESSAGE, receiverSid, dataToPublish);
+    socketEmit<SOCKET_TOPIC.CHAT_MESSAGE>(SOCKET_TOPIC.CHAT_MESSAGE, receiverClient.sid, dataToPublish);
     return res.send({ message: "message sent", id, timestamp });
   })
 );

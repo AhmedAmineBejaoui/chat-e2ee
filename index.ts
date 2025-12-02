@@ -3,10 +3,12 @@ import fs from 'fs';
 import http from 'http';
 import https from 'https';
 import path from 'path';
+import express from 'express';
 
 import app from './app';
 import db from './backend/db';
 import { initSocket } from './backend/socket.io';
+import audioRoutes from './routes/audioRoutes';
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -18,7 +20,11 @@ const logStartup = (protocol: Protocol) => {
   db.connectDb();
 };
 
+// Routes pour l'upload audio
+app.use('/api/audio', audioRoutes);
 
+// Servir les fichiers audio statiques
+app.use('/uploads/audio', express.static(path.join(__dirname, 'uploads/audio')));
 
 let server: http.Server | https.Server | null = null;
 

@@ -45,9 +45,11 @@ export const initSocket = (server) => {
 
   const allowedOrigins = parseAllowedOrigins();
 
+  const maxPayloadBytes = Number(process.env.SOCKET_MAX_PAYLOAD_BYTES || 5 * 1024 * 1024);
   io = new Server(server, {
     allowEIO3: true,
     transports: ["websocket", "polling"],
+    maxHttpBufferSize: maxPayloadBytes,
     cors: {
       origin: allowedOrigins.length > 0 ? allowedOrigins : "*",
       methods: ["GET", "POST", "OPTIONS"],

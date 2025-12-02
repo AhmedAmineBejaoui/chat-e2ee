@@ -5,6 +5,23 @@ export class AesGcmEncryption {
     private aesKeyLocal?: CryptoKey;
     private aesKeyRemote?: CryptoKey;
 
+    private static toBase64(data: Uint8Array): string {
+        let binary = "";
+        data.forEach((byte) => {
+            binary += String.fromCharCode(byte);
+        });
+        return window.btoa(binary);
+    }
+
+    private static fromBase64(data: string): Uint8Array {
+        const binary = window.atob(data);
+        const buffer = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+            buffer[i] = binary.charCodeAt(i);
+        }
+        return buffer;
+    }
+
     public async int(): Promise<CryptoKey> {
         if(this.aesKeyLocal) {
             return this.aesKeyLocal;
@@ -24,6 +41,14 @@ export class AesGcmEncryption {
             throw new Error("AES key from remote not set.");
         }
         return this.aesKeyRemote;
+    }
+
+    public hasRemoteKey(): boolean {
+        return !!this.aesKeyRemote;
+    }
+
+    public clearRemoteKey(): void {
+        this.aesKeyRemote = undefined;
     }
 
     /**
@@ -50,6 +75,48 @@ export class AesGcmEncryption {
             ["decrypt"] // Usage options for the key
         );
 
+    }
+
+    public async encryptText(plaintext: string): Promise<string> {
+        await this.int();
+        if(!this.aesKeyLocal) {
+            throw new Error("AES key not generated");
+        }
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const encoded = new TextEncoder().encode(plaintext);
+        const encrypted = await crypto.subtle.encrypt(
+            {
+                name: "AES-GCM",
+                iv
+            },
+            this.aesKeyLocal,
+            encoded
+        );
+        const cipherText = AesGcmEncryption.toBase64(new Uint8Array(encrypted));
+        const ivText = AesGcmEncryption.toBase64(iv);
+        return `${ivText}:${cipherText}`;
+    }
+
+    public async decryptText(payload: string): Promise<string> {
+        if(!this.aesKeyRemote) {
+            throw new Error("Remote AES key not set.");
+        }
+        const [ivText, cipherText] = payload.split(":");
+        if(!ivText || !cipherText) {
+            throw new Error("Invalid encrypted payload");
+        }
+        const iv = AesGcmEncryption.fromBase64(ivText);
+        const cipher = AesGcmEncryption.fromBase64(cipherText);
+
+        const decrypted = await crypto.subtle.decrypt(
+            {
+                name: "AES-GCM",
+                iv
+            },
+            this.aesKeyRemote,
+            cipher
+        );
+        return new TextDecoder().decode(decrypted);
     }
 
     public async encryptData(data: ArrayBuffer) {

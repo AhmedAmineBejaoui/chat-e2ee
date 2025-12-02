@@ -5,7 +5,7 @@ type LinkSharingInstructionProps = {
   online?: string;
   link?: string;
   pin?: string | null;
-  darkMode?: string;
+  darkMode?: boolean;
 };
 
 const LinkSharingInstruction = ({ online, link, pin, darkMode }: LinkSharingInstructionProps) => {
@@ -21,7 +21,9 @@ const LinkSharingInstruction = ({ online, link, pin, darkMode }: LinkSharingInst
   // };
 
   return (
-    <div className={style.linkSharingInstruction}>
+    <div
+      className={`${style.linkSharingInstruction} ${!darkMode && style.lightInstruction}`}
+    >
       <div>Send this link to who you want to chat with</div>
       <input
         ref={inputRef}

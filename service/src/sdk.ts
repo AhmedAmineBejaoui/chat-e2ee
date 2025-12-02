@@ -11,11 +11,14 @@ import { SocketInstance, SubscriptionType } from './socket/socket';
 import { Logger } from './utils/logger';
 export { setConfig } from './configContext';
 import { generateUUID } from './utils/uuid';
-import { WebRTCCall, E2ECall, peerConnectionEvents, PeerConnectionEventType } from './webrtc';
+import { WebRTCCall, E2ECall, peerConnectionEvents, PeerConnectionEventType, CallOptions } from './webrtc';
 export { IE2ECall } from './webrtc';
 
 export const utils = {
     decryptMessage: (ciphertext: string, privateKey: string) => _cryptoUtils.decryptMessage(ciphertext, privateKey),
+    signMessage: (plaintext: string, privateKey: string) => _cryptoUtils.signMessage(plaintext, privateKey),
+    verifySignature: (plaintext: string, signature: string, publicKey: string) => _cryptoUtils.verifySignature(plaintext, signature, publicKey),
+    generateSigningKeypairs: () => _cryptoUtils.generateSigningKeypairs(),
     generateUUID
 }
 
@@ -85,6 +88,7 @@ class ChatE2EE implements IChatE2EE {
         this.on("on-alice-disconnect", () => {
             evetLogger.log("Receiver disconnected");
             this.receiverPublicKey = null;
+            this.symEncryption.clearRemoteKey();
         });
 
         /**
@@ -156,7 +160,7 @@ class ChatE2EE implements IChatE2EE {
     public isEncrypted(): boolean {
         this.checkInitialized();
         logger.log(`isEncrypted()`);
-        return !!this.receiverPublicKey;
+        return this.symEncryption.hasRemoteKey();
     }
 
     public async delete(): Promise<void> {
@@ -172,23 +176,29 @@ class ChatE2EE implements IChatE2EE {
         return getUsersInChannel({ channelID: this.channelId });
     }
 
-    public async sendMessage({ image, text }): Promise<ISendMessageReturn> {
+    public async sendMessage({ image, audio, text }): Promise<ISendMessageReturn> {
         logger.log(`sendMessage()`);
         this.checkInitialized();
-        return sendMessage({ channelID: this.channelId, userId: this.userId, image, text })
+        return sendMessage({ channelID: this.channelId, userId: this.userId, image, audio, text })
     }
 
-    public encrypt({ image, text }): { send: () => Promise<ISendMessageReturn> } {
+    public encrypt({ image, audio, text }: { image?: string; audio?: string; text: string }): { send: () => Promise<ISendMessageReturn> } {
         logger.log(`encrypt()`);
         this.checkInitialized();
 
-        const encryptedTextPromise = _cryptoUtils.encryptMessage(text, this.receiverPublicKey);
+        const encryptedTextPromise = this.symEncryption.encryptText(text);
         return ({
             send: async () => {
                 const encryptedText = await encryptedTextPromise;
-                return this.sendMessage({ image, text: encryptedText })
+                return this.sendMessage({ image, audio, text: encryptedText })
             }
         })
+    }
+
+    public async decryptMessage(ciphertext: string): Promise<string> {
+        logger.log('decryptMessage()');
+        this.checkInitialized();
+        return this.symEncryption.decryptText(ciphertext);
     }
 
     public on(listener: string, callback): void {
@@ -229,7 +239,7 @@ class ChatE2EE implements IChatE2EE {
         }
     }
 
-    public async startCall(): Promise<E2ECall> {
+    public async startCall(options?: CallOptions): Promise<E2ECall> {
         if(!WebRTCCall.isSupported()) {
             throw new Error('createEncodedStreams not supported.');
         }
@@ -237,7 +247,7 @@ class ChatE2EE implements IChatE2EE {
             throw new Error('Call already active');
         }
         const webrtcCall = this.getWebRtcCall();
-        await webrtcCall.startCall()
+        await webrtcCall.startCall(options)
         const call = new E2ECall(webrtcCall);
         return call;
     }
@@ -254,6 +264,7 @@ class ChatE2EE implements IChatE2EE {
         const receiverPublicKey = await getPublicKey({ userId: this.userId, channelId: this.channelId });
         logger.log(`setPublicKey() - ${!!receiverPublicKey?.publicKey}`);
         this.receiverPublicKey = receiverPublicKey?.publicKey;
+        this.symEncryption.clearRemoteKey();
         if(receiverPublicKey.aesKey) {
             await this.symEncryption.setRemoteAesKey(receiverPublicKey.aesKey)
         }
