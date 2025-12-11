@@ -297,23 +297,34 @@ const Chat = () => {
     const usersInChannel: TypeUsersInChannel = [];
 
     try {
-      const users = await chate2ee.getUsersInChannel();
+      const response: any = await chate2ee.getUsersInChannel();
+      console.log('[getSetUsers] Response from API:', response);
+      
+      // Handle both array and object with users property
+      const users = Array.isArray(response) ? response : (response?.users || []);
       usersInChannel.push(...users);
+      
+      console.log('[getSetUsers] Users in channel:', usersInChannel);
+      console.log('[getSetUsers] Current user ID:', userId);
+      console.log('[getSetUsers] Group mode:', isGroupMode);
     } catch (err) {
-      console.error(err);
+      console.error('[getSetUsers] Error:', err);
     }
 
     setUsers(usersInChannel);
-    const alice = usersInChannel.find((user) => user.uuid !== userId);
+    const otherUsers = usersInChannel.filter((user) => user.uuid !== userId);
+    console.log('[getSetUsers] Other users:', otherUsers);
 
-    if (alice) {
+    if (otherUsers.length > 0) {
       playNotification();
     }
   };
 
   const validateCallReady = useCallback(() => {
-    if (isGroupMode) {
-      alert("Les appels ne sont pas supportés en mode groupe.");
+    // Allow calls in group mode only when there are exactly 2 users
+    const totalUsers = usersInChannel.length;
+    if (isGroupMode && totalUsers > 2) {
+      alert("Les appels ne sont supportés qu'entre 2 personnes. Actuellement " + totalUsers + " membres.");
       return false;
     }
     if (!chate2ee.isEncrypted()) {
@@ -323,6 +334,10 @@ const Chat = () => {
     const hasPeer = usersInChannel.some((user) => user.uuid && user.uuid !== userId);
     if (!hasPeer) {
       alert("Attendez que votre correspondant rejoigne la conversation.");
+      return false;
+    }
+    if (totalUsers !== 2) {
+      alert("Les appels nécessitent exactement 2 participants.");
       return false;
     }
     return true;
@@ -695,7 +710,7 @@ const Chat = () => {
               <button 
                 onClick={toggleGroupMode} 
                 className={`relative p-2.5 rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400 hover:text-black hover:scale-110 hover:shadow-[0_0_20px_rgba(0,255,255,0.6)] transition-all duration-300 group ${isGroupMode ? 'bg-cyan-400 text-black' : ''}`}
-                title={isGroupMode ? "Mode Groupe" : "Basculer en mode Groupe"}
+                title={isGroupMode ? `Mode Groupe (${usersInChannel.length} membres)` : "Basculer en mode Groupe"}
               >
                 {isGroupMode ? <Users className="w-5 h-5 relative z-10" /> : <User className="w-5 h-5 relative z-10" />}
                 <div className="absolute inset-0 rounded-full bg-cyan-400/0 group-hover:bg-cyan-400/20 blur-lg transition-all duration-300" />
@@ -703,8 +718,8 @@ const Chat = () => {
               <button 
                 onClick={startAudioCall} 
                 className="relative p-2.5 rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400 hover:text-black hover:scale-110 hover:shadow-[0_0_20px_rgba(0,255,255,0.6)] transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Audio Call"
-                disabled={isGroupMode}
+                title={usersInChannel.length === 2 ? "Audio Call" : `Appels disponibles avec 2 personnes (actuellement ${usersInChannel.length})`}
+                disabled={usersInChannel.length !== 2}
               >
                 <Phone className="w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 rounded-full bg-cyan-400/0 group-hover:bg-cyan-400/20 blur-lg transition-all duration-300" />
@@ -712,8 +727,8 @@ const Chat = () => {
               <button 
                 onClick={startVideoCall} 
                 className="relative p-2.5 rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400 hover:text-black hover:scale-110 hover:shadow-[0_0_20px_rgba(0,255,255,0.6)] transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Video Call"
-                disabled={isGroupMode}
+                title={usersInChannel.length === 2 ? "Video Call" : `Appels disponibles avec 2 personnes (actuellement ${usersInChannel.length})`}
+                disabled={usersInChannel.length !== 2}
               >
                 <Video className="w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 rounded-full bg-cyan-400/0 group-hover:bg-cyan-400/20 blur-lg transition-all duration-300" />
