@@ -57,6 +57,97 @@
   justify-content: center;
 }
 
+.incomingSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(0, 201, 213, 0.12), rgba(0, 201, 213, 0.04));
+  border: 1px solid rgba(0, 201, 213, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 201, 213, 0.15);
+}
+
+.overlayCardLight .incomingSection {
+  background: linear-gradient(135deg, rgba(0, 201, 213, 0.08), rgba(4, 38, 45, 0.05));
+  border-color: rgba(8, 145, 178, 0.25);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+.incomingTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.incomingIcon {
+  width: 28px;
+  height: 28px;
+  color: #34d399;
+  flex-shrink: 0;
+}
+
+.incomingText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.incomingLabel {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.incomingSubtitle {
+  font-size: 13px;
+  opacity: 0.8;
+  color: #a5f3fc;
+}
+
+.overlayCardLight .incomingSubtitle {
+  color: #075985;
+}
+
+.incomingButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.incomingBtn {
+  min-width: 140px;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #e0f7fa;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.incomingBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.acceptBtn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 12px 30px rgba(34, 197, 94, 0.4);
+}
+
+.declineBtn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 12px 30px rgba(239, 68, 68, 0.35);
+}
+
 .callInfo {
   display: flex;
   flex-direction: column;

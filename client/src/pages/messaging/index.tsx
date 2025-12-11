@@ -56,6 +56,7 @@ const Chat = () => {
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [userName, setUserName] = useState<string>("");
   const [isRinging, setIsRinging] = useState(false);
+  const [incomingCall, setIncomingCall] = useState(false);
   const navigate = useNavigate();
 
   const myKeyRef = useRef<{ privateKey?: string } | null>();
@@ -246,6 +247,7 @@ const Chat = () => {
 
   const resetCallState = useCallback(() => {
     stopRingtone();
+    setIncomingCall(false);
     setActiveCallMode(null);
     setCallState(null);
     callRef.current = null;
@@ -275,11 +277,13 @@ const Chat = () => {
         // Stop ringtone when call is connected, closed, or failed
         if (state === "connected") {
           console.log('[Call] Connected - stopping ringtone');
+          setIncomingCall(false);
           stopRingtone();
         }
         
         if (state === "closed" || state === "disconnected" || state === "failed") {
           console.log('[Call] Call ended - stopping ringtone and resetting');
+          setIncomingCall(false);
           stopRingtone();
           resetCallState();
         }
@@ -364,6 +368,7 @@ const Chat = () => {
       if (!validateCallReady()) {
         return;
       }
+      setIncomingCall(false);
       if (chate2ee.activeCall && !callRef.current) {
         try {
           await chate2ee.endCall();
@@ -408,14 +413,21 @@ const Chat = () => {
     }
   }, [resetCallState]);
 
+  const acceptIncomingCall = useCallback(() => {
+    stopRingtone();
+    setIncomingCall(false);
+  }, [stopRingtone]);
+
   useEffect(() => {
     const handleCallAdded = (call: IE2ECall) => {
       // Play ringtone when receiving an incoming call
       console.log('[Call] Incoming call received, playing ringtone');
       playRingtone();
+      setIncomingCall(true);
       attachCall(call);
     };
     const handleCallRemoved = () => {
+      setIncomingCall(false);
       resetCallState();
     };
     chate2ee.on("call-added", handleCallAdded);
@@ -901,6 +913,8 @@ const Chat = () => {
             callState={callState}
             onEndCall={endActiveCall}
             darkMode={darkMode}
+            incoming={incomingCall}
+            onAcceptCall={acceptIncomingCall}
             onToggleMute={(muted) => {
               if (callRef.current) {
                 callRef.current.toggleAudio(!muted);

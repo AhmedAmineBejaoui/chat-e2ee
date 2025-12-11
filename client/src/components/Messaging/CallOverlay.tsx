@@ -9,9 +9,20 @@ type CallOverlayProps = {
   darkMode: boolean;
   onToggleMute?: (muted: boolean) => void;
   onToggleVideo?: (videoOff: boolean) => void;
+  incoming?: boolean;
+  onAcceptCall?: () => void;
 };
 
-const CallOverlay = ({ mode, callState, onEndCall, darkMode, onToggleMute, onToggleVideo }: CallOverlayProps) => {
+const CallOverlay = ({
+  mode,
+  callState,
+  onEndCall,
+  darkMode,
+  onToggleMute,
+  onToggleVideo,
+  incoming,
+  onAcceptCall
+}: CallOverlayProps) => {
   const hidden = !mode;
   const getLabel = () => {
     if (mode === "video") return "Video Call";
@@ -71,6 +82,8 @@ const CallOverlay = ({ mode, callState, onEndCall, darkMode, onToggleMute, onTog
     onToggleVideo?.(newVideoOffState);
   };
 
+  const showIncomingPrompt = incoming && (callState === "new" || callState === "connecting" || !callState);
+
   return (
     <div
       className={`${styles.overlay} ${hidden ? styles.overlayHidden : ""}`}
@@ -103,6 +116,44 @@ const CallOverlay = ({ mode, callState, onEndCall, darkMode, onToggleMute, onTog
             </div>
           </div>
         </div>
+
+        {showIncomingPrompt && (
+          <div className={styles.incomingSection}>
+            <div className={styles.incomingTitle}>
+              {mode === "video" ? (
+                <Video className={styles.incomingIcon} />
+              ) : (
+                <Phone className={styles.incomingIcon} />
+              )}
+              <div className={styles.incomingText}>
+                <span className={styles.incomingLabel}>
+                  Appel {mode === "video" ? "vidéo" : "audio"} entrant
+                </span>
+                <span className={styles.incomingSubtitle}>Accepter pour répondre ou refuser l'appel.</span>
+              </div>
+            </div>
+            <div className={styles.incomingButtons}>
+              <button
+                className={`${styles.incomingBtn} ${styles.acceptBtn}`}
+                type="button"
+                onClick={() => onAcceptCall?.()}
+                aria-label="Accepter l'appel"
+              >
+                {mode === "video" ? <Video size={20} /> : <Phone size={20} />}
+                Accepter
+              </button>
+              <button
+                className={`${styles.incomingBtn} ${styles.declineBtn}`}
+                type="button"
+                onClick={onEndCall}
+                aria-label="Refuser l'appel"
+              >
+                <PhoneOff size={20} />
+                Refuser
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Video Grid */}
         <div
