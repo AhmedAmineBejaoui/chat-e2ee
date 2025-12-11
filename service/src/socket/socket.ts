@@ -1,8 +1,8 @@
 import socketIOClient, { Socket, ManagerOptions, SocketOptions } from 'socket.io-client';
 import { Logger } from '../utils/logger';
-import { chatJoinPayloadType } from '../sdk';
+import { chatJoinPayloadType, groupJoinPayloadType } from '../sdk';
 import { configContext } from '../configContext';
-export type SocketListenerType = "limit-reached" | "delivered" | "on-alice-join" | "on-alice-disconnect" | "chat-message" | "webrtc-session-description";
+export type SocketListenerType = "limit-reached" | "delivered" | "on-alice-join" | "on-alice-disconnect" | "chat-message" | "webrtc-session-description" | "on-member-join" | "on-member-leave" | "member-list-update";
 
 export type SubscriptionType = Map<SocketListenerType, Set<Function>>;
 export type SubscriptionContextType = () => SubscriptionType;
@@ -13,7 +13,11 @@ const SOCKET_LISTENERS: Record<string, SocketListenerType> = {
     'ON_ALICE_JOIN': "on-alice-join",
     'ON_ALICE_DISCONNECT': "on-alice-disconnect",
     'CHAT_MESSAGE': "chat-message",
-    "WEBRTC_SESSION_DESCRIPTION": "webrtc-session-description"
+    "WEBRTC_SESSION_DESCRIPTION": "webrtc-session-description",
+    // Group events
+    'ON_MEMBER_JOIN': "on-member-join",
+    'ON_MEMBER_LEAVE': "on-member-leave",
+    'MEMBER_LIST_UPDATE': "member-list-update"
 }
 
 const getBaseURL = (): string => {
@@ -45,7 +49,11 @@ export class SocketInstance {
             this.handler(SOCKET_LISTENERS.CHAT_MESSAGE, args);
             this.markDelivered(args[0]);
         });
-        this.socket.on(SOCKET_LISTENERS.WEBRTC_SESSION_DESCRIPTION, (...args) => this.handler(SOCKET_LISTENERS.WEBRTC_SESSION_DESCRIPTION, args))
+        this.socket.on(SOCKET_LISTENERS.WEBRTC_SESSION_DESCRIPTION, (...args) => this.handler(SOCKET_LISTENERS.WEBRTC_SESSION_DESCRIPTION, args));
+        // Group event listeners
+        this.socket.on(SOCKET_LISTENERS.ON_MEMBER_JOIN, (...args) => this.handler(SOCKET_LISTENERS.ON_MEMBER_JOIN, args));
+        this.socket.on(SOCKET_LISTENERS.ON_MEMBER_LEAVE, (...args) => this.handler(SOCKET_LISTENERS.ON_MEMBER_LEAVE, args));
+        this.socket.on(SOCKET_LISTENERS.MEMBER_LIST_UPDATE, (...args) => this.handler(SOCKET_LISTENERS.MEMBER_LIST_UPDATE, args));
         logger.log('Initiialized');
     }
 
@@ -53,6 +61,12 @@ export class SocketInstance {
         const { publicKey, ...rest } = payload;
         this.logger.log(`joinChat(), publicKey removed from log, ${JSON.stringify(rest)}`);
         this.socket.emit('chat-join', payload)
+    }
+
+    public joinGroup(payload: groupJoinPayloadType): void {
+        const { publicKey, ...rest } = payload;
+        this.logger.log(`joinGroup(), publicKey removed from log, ${JSON.stringify(rest)}`);
+        this.socket.emit('group-join', payload)
     }
 
     public dispose(): void {

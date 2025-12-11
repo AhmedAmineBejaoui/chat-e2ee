@@ -9,6 +9,7 @@ import app from './app';
 import db from './backend/db';
 import { initSocket } from './backend/socket.io';
 import audioRoutes from './routes/audioRoutes';
+import fileRoutes from './routes/fileRoutes';
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -23,8 +24,14 @@ const logStartup = (protocol: Protocol) => {
 // Routes pour l'upload audio
 app.use('/api/audio', audioRoutes);
 
+// Routes pour l'upload de fichiers (tous types)
+app.use('/api/files', fileRoutes);
+
 // Servir les fichiers audio statiques
 app.use('/uploads/audio', express.static(path.join(__dirname, 'uploads/audio')));
+
+// Servir les fichiers uploadés (tous types)
+app.use('/uploads/files', express.static(path.join(__dirname, 'uploads/files')));
 
 let server: http.Server | https.Server | null = null;
 

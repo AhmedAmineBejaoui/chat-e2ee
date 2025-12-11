@@ -15,8 +15,18 @@ export enum SOCKET_TOPIC {
   DELIVERED = 'delivered',
   ON_ALICE_DISCONNECTED = 'on-alice-disconnect',
   MESSAGE = 'message',
-  WEBRTC_SESSION_DESCRIPTION = 'webrtc-session-description'
+  WEBRTC_SESSION_DESCRIPTION = 'webrtc-session-description',
+  // Group events
+  ON_MEMBER_JOIN = 'on-member-join',
+  ON_MEMBER_LEAVE = 'on-member-leave',
+  MEMBER_LIST_UPDATE = 'member-list-update',
 }
+
+type MemberInfo = {
+  oderId: string,
+  odernName?: string,
+  publicKey?: string
+};
 
 type emitDataTypes = {
   [SOCKET_TOPIC.CHAT_MESSAGE]: ChatMessageType,
@@ -27,6 +37,9 @@ type emitDataTypes = {
     publicKey: string
   },
   [SOCKET_TOPIC.MESSAGE]: string,
+  [SOCKET_TOPIC.ON_MEMBER_JOIN]: MemberInfo,
+  [SOCKET_TOPIC.ON_MEMBER_LEAVE]: { userId: string },
+  [SOCKET_TOPIC.MEMBER_LIST_UPDATE]: { members: string[], count: number },
   [key: string]: unknown,
 }
 

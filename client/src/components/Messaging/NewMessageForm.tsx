@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import ImagePicker from "./ImagePicker";
+import FilePicker from "./FilePicker";
 import RemoveButton from "./RemoveButton";
 import EmojiRow from "./EmojiRow";
 import detectMobile from "../../utils/detectMobile";
@@ -20,6 +21,11 @@ type NewMessageFormProps = {
   clearVoiceClip?: () => void;
   voiceUploading?: boolean;
   setVoiceUploading?: SetStateType<boolean>;
+  selectedFile?: any;
+  setSelectedFile?: SetStateType<any>;
+  fileUploading?: boolean;
+  setFileUploading?: SetStateType<boolean>;
+  onFileChoose?: (file: File) => Promise<void>;
 };
 
 const audioUploadURL = "/api/audio/upload";
@@ -38,6 +44,11 @@ export const NewMessageForm = ({
   clearVoiceClip,
   voiceUploading,
   setVoiceUploading,
+  selectedFile,
+  setSelectedFile,
+  fileUploading,
+  setFileUploading,
+  onFileChoose,
 }: NewMessageFormProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [emojiVisibility, setEmojiVisibility] = useState(false);
@@ -199,12 +210,30 @@ export const NewMessageForm = ({
             <Smile className="w-5 h-5" />
           </button>
           
+          {/* Image picker (legacy) */}
           <ImagePicker
             selectedImg={selectedImg}
             setSelectedImg={setSelectedImg}
             setText={setText}
             previewImg={previewImg}
             setPreviewImg={setPreviewImg}
+          />
+
+          {/* Generic file picker (supports any type) */}
+          <FilePicker
+            onFileChoose={async (file) => {
+              setFileUploading?.(true);
+              try {
+                if (onFileChoose) {
+                  await onFileChoose(file);
+                }
+              } catch (err) {
+                console.error('File upload failed', err);
+                alert('Erreur lors de l\'upload du fichier');
+              } finally {
+                setFileUploading?.(false);
+              }
+            }}
           />
 
           <input
@@ -242,6 +271,12 @@ export const NewMessageForm = ({
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-holo-text-secondary px-1 md:px-4">
         {selectedImg && <RemoveButton onClick={resetImage} />}
+        {selectedFile && (
+          <div className="flex items-center gap-2 px-2 py-1 bg-holo-panel/80 rounded-full border border-holo-border">
+            <div className="text-sm">{selectedFile.originalName || selectedFile.filename}</div>
+            <button onClick={() => setSelectedFile?.(null)} className="text-xs underline">Remove</button>
+          </div>
+        )}
         {isRecording && <span>Recording {formatDuration(recordingDuration)}</span>}
         {voiceUploading && <span>Uploading voice message...</span>}
       </div>

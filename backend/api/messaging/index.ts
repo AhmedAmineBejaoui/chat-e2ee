@@ -16,7 +16,7 @@ const clients = getClientInstance();
 router.post(
   "/message",
   asyncHandler(async (req: Request, res: Response): Promise<Response<MessageResponse>> => {
-    const { message, sender, channel, image, audio } = req.body;
+    const { message, sender, channel, image, audio, file } = req.body;
 
     if (!message && !image && !audio) {
       return res.status(400).send({ message: "Message content missing" });
@@ -32,12 +32,6 @@ router.post(
       return res.status(401).send({ error: "Permission denied" });
     }
 
-    const receiver = clients.getReceiverIDBySenderID(sender, channel);
-    if(!receiver) {
-      console.error('No receiver is in the channel');
-      return;
-    }
-
     const id = new Date().valueOf();
     const timestamp = new Date().valueOf();
     const dataToPublish: ChatMessageType = {
@@ -47,15 +41,46 @@ router.post(
       id,
       timestamp,
       ...(image ? { image } : {}),
-      ...(audio ? { audio } : {})
+      ...(audio ? { audio } : {}),
+      ...(file ? { file } : {})
     };
-    const receiverClient = clients.getSIDByIDs(receiver, channel);
-    if (!receiverClient?.sid) {
-      console.error('Receiver socket not found', { channel, receiver });
-      return res.status(503).send({ message: "Receiver is not connected" });
+
+    const channelMode = clients.getChannelMode(channel);
+    
+    if (channelMode === 'group') {
+      // Group mode: send to all members except sender
+      const receivers = clients.getReceiversBySenderID(sender, channel);
+      if (receivers.length === 0) {
+        console.error('No other members in the group');
+        return res.status(503).send({ message: "No other members in the group" });
+      }
+
+      let deliveredCount = 0;
+      receivers.forEach(receiverId => {
+        const receiverClient = clients.getSIDByIDs(receiverId, channel);
+        if (receiverClient?.sid) {
+          socketEmit<SOCKET_TOPIC.CHAT_MESSAGE>(SOCKET_TOPIC.CHAT_MESSAGE, receiverClient.sid, dataToPublish);
+          deliveredCount++;
+        }
+      });
+
+      return res.send({ message: "message sent", id, timestamp, deliveredTo: deliveredCount });
+    } else {
+      // Private mode: send to single receiver
+      const receiver = clients.getReceiverIDBySenderID(sender, channel);
+      if(!receiver) {
+        console.error('No receiver is in the channel');
+        return res.status(503).send({ message: "Receiver is not connected" });
+      }
+
+      const receiverClient = clients.getSIDByIDs(receiver, channel);
+      if (!receiverClient?.sid) {
+        console.error('Receiver socket not found', { channel, receiver });
+        return res.status(503).send({ message: "Receiver is not connected" });
+      }
+      socketEmit<SOCKET_TOPIC.CHAT_MESSAGE>(SOCKET_TOPIC.CHAT_MESSAGE, receiverClient.sid, dataToPublish);
+      return res.send({ message: "message sent", id, timestamp });
     }
-    socketEmit<SOCKET_TOPIC.CHAT_MESSAGE>(SOCKET_TOPIC.CHAT_MESSAGE, receiverClient.sid, dataToPublish);
-    return res.send({ message: "message sent", id, timestamp });
   })
 );
 
@@ -93,6 +118,34 @@ router.get(
   })
 );
 
+// Get public keys of all members in a group
+router.get(
+  "/get-group-public-keys",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { userId, channel } = req.query;
+
+    const { valid } = await channelValid(channel as string);
+    if (!valid) {
+      return res.sendStatus(404);
+    }
+
+    const channelMode = clients.getChannelMode(channel as string);
+    if (channelMode !== 'group') {
+      return res.status(400).send({ error: "Not a group channel" });
+    }
+
+    const members = clients.getOtherMembersInChannel(channel as string, userId as string);
+    const publicKeys: Record<string, { publicKey: string | null, aesKey: string | null }> = {};
+
+    for (const memberId of members) {
+      const data = await db.findOneFromDB<GetPublicKeyResponse>({ channel, user: memberId }, PUBLIC_KEY_COLLECTION);
+      publicKeys[memberId] = data || { publicKey: null, aesKey: null };
+    }
+
+    return res.send({ publicKeys, members });
+  })
+);
+
 router.get(
   "/get-users-in-channel",
   asyncHandler(async (req: Request, res: Response): Promise<Response<UsersInChannelResponse>> => {
@@ -105,8 +158,40 @@ router.get(
     }
 
     const data = clients.getClientsByChannel(channel as string);
-    const usersInChannel = data ? Object.keys(data).map((userId) => ({ uuid: userId })) : [];
-    return res.send(usersInChannel);
+    const usersInChannel = data ? Object.keys(data).map((oderId) => ({ uuid: oderId })) : [];
+    const channelMode = clients.getChannelMode(channel as string);
+    
+    return res.send({
+      users: usersInChannel,
+      count: usersInChannel.length,
+      mode: channelMode,
+      maxMembers: channelMode === 'group' ? 100 : 2
+    });
+  })
+);
+
+// Get channel info including mode and member count
+router.get(
+  "/channel-info",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { channel } = req.query;
+
+    const { valid } = await channelValid(channel as string);
+    if (!valid) {
+      return res.sendStatus(404);
+    }
+
+    const memberCount = clients.getMemberCount(channel as string);
+    const channelMode = clients.getChannelMode(channel as string);
+    const members = clients.getAllMembersInChannel(channel as string);
+
+    return res.send({
+      channelId: channel,
+      mode: channelMode,
+      memberCount,
+      members,
+      maxMembers: channelMode === 'group' ? 100 : 2
+    });
   })
 );
 

@@ -255,7 +255,6 @@ class Peer {
         if(!this.audioEl) {
             this.audioEl = document.createElement('audio');
             this.audioEl.autoplay = true;
-            this.audioEl.playsInline = true;
             this.audioEl.volume = 1.0;
         }
         this.audioEl.srcObject = stream;

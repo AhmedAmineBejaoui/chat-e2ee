@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import Image from "../Image";
 import { Timestamp } from "mongodb";
-import { Play, Pause, Volume2 } from "lucide-react";
+import { Play, Pause, Volume2, File as FileIcon } from "lucide-react";
 
 type messageProps = {
   owner: boolean;
   body?: string;
   image?: string;
+  file?: any;
   audio?: string;
   local?: boolean;
   id?: string;
@@ -142,7 +143,7 @@ const AudioPlayer = ({ src, owner }: { src: string; owner: boolean }) => {
 export const Message = ({
   handleSend,
   index,
-  message: { owner, body, image, audio, local, id, timestamp },
+  message: { owner, body, image, file, audio, local, id, timestamp },
   deliveredID,
 }: MessageProps) => {
   const [sending, setSending] = useState(false);
@@ -155,7 +156,7 @@ export const Message = ({
     setSendError(null);
 
     try {
-      await handleSend(body, image, audio, index);
+      await handleSend(body, image, audio, index, file);
     } catch (error: any) {
       console.log({ error });
       setFailed(true);
@@ -196,6 +197,32 @@ export const Message = ({
               <Image src={image} maxWidth="320px" maxHeight="320px" />
             </div>
           )}
+
+          {file && (
+            <div className="rounded-lg border border-holo-border/70 bg-black/40 p-3">
+              {file.mimetype?.startsWith?.('image/') ? (
+                <div className="overflow-hidden rounded-xl border border-black/10">
+                  <Image src={file.url} maxWidth="320px" maxHeight="320px" />
+                </div>
+              ) : file.mimetype?.startsWith?.('video/') ? (
+                <video controls className="max-w-full rounded-md">
+                  <source src={file.url} type={file.mimetype} />
+                  Your browser does not support the video tag.
+                </video>
+              ) : file.mimetype?.startsWith?.('audio/') ? (
+                <audio controls src={file.url} className="w-full" />
+              ) : (
+                <a href={file.url} target="_blank" rel="noreferrer" className="flex items-center gap-3">
+                  <FileIcon className="w-5 h-5 text-holo-text-secondary" />
+                  <div className="text-sm">
+                    <div className="font-medium">{file.originalName}</div>
+                    <div className="text-xs text-holo-text-secondary">{(file.size / (1024*1024)).toFixed(2)} MB</div>
+                  </div>
+                </a>
+              )}
+            </div>
+          )}
+
           {audio && <AudioPlayer src={audio} owner={owner} />}
           {body && <p className="text-[15px] leading-relaxed">{body}</p>}
           {timestamp && (

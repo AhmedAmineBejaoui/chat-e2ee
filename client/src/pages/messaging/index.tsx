@@ -5,6 +5,7 @@ import {
 } from '@chat-e2ee/service';
 import { Message, NewMessageForm, ScrollWrapper, CallOverlay } from '../../components/Messaging';
 import LinkSharingInstruction from '../../components/Messaging/LinkSharingInstruction';
+import GroupMembersList from '../../components/Messaging/GroupMembersList';
 import Notification from '../../components/Notification';
 import notificationAudio from '../../components/Notification/audio.mp3';
 import ringtoneAudio from '../../components/Notification/ringtone.mp3';
@@ -14,7 +15,7 @@ import {
     getKeyPairFromCache, getUserSessionID, isEmptyMessage, storeKeyPair, storeUserSessionID
 } from './helpers';
 import { getServerURL } from '../../utils/serverConfig';
-import { MessageCircle, Phone, Video, Moon, Trash2, Lock } from 'lucide-react';
+import { MessageCircle, Phone, Video, Moon, Trash2, Lock, Users, User } from 'lucide-react';
 
 const serverURL = getServerURL();
 
@@ -28,6 +29,7 @@ type messageObj = {
   body?: string;
   image?: string;
   audio?: string;
+  file?: any;
   sender?: string;
   id?: string;
   local?: boolean;
@@ -38,9 +40,11 @@ const Chat = () => {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<messageObj>([]);
   const [selectedImg, setSelectedImg] = useState("");
+  const [selectedFile, setSelectedFile] = useState<any>(null);
   const [voiceClip, setVoiceClip] = useState("");
   const [previewImg, setPreviewImg] = useState(false);
   const [voiceUploading, setVoiceUploading] = useState(false);
+  const [fileUploading, setFileUploading] = useState(false);
   const [usersInChannel, setUsers] = useState<{ uuid?: string }[]>([]);
   const [notificationState, setNotificationState] = useState(false);
   const [deliveredID, setDeliveredID] = useState<string[]>([]);
@@ -49,6 +53,8 @@ const Chat = () => {
   const [cryptoError, setCryptoError] = useState<string | null>(null);
   const [activeCallMode, setActiveCallMode] = useState<"audio" | "video" | null>(null);
   const [callState, setCallState] = useState<RTCPeerConnectionState | null>(null);
+  const [isGroupMode, setIsGroupMode] = useState(false);
+  const [userName, setUserName] = useState<string>("");
   const [isRinging, setIsRinging] = useState(false);
   const navigate = useNavigate();
 
@@ -104,7 +110,7 @@ const Chat = () => {
     setIsRinging(false);
   };
 
-  const initPublicKey = async (channelID: string) => {
+  const initPublicKey = async (channelID: string, forceGroupMode = false) => {
     try {
       await chate2ee.init();
     } catch (err: any) {
@@ -121,7 +127,32 @@ const Chat = () => {
       console.log("KeyPair received");
     }
     myKeyRef.current = _keyPair;
-    chate2ee.setChannel(channelID, userId);
+
+    // Determine if this should be group mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const modeParam = urlParams.get('mode');
+    const shouldBeGroup = forceGroupMode || modeParam === 'group';
+
+    if (shouldBeGroup) {
+      setIsGroupMode(true);
+      // Prompt for username if not set
+      if (!userName) {
+        const name = prompt("Entrez votre nom pour rejoindre le groupe:", `User${Math.floor(Math.random() * 1000)}`);
+        if (name) {
+          setUserName(name);
+          chate2ee.joinGroup(channelID, userId, name);
+        } else {
+          // Fallback to private mode if no name provided
+          setIsGroupMode(false);
+          chate2ee.setChannel(channelID, userId);
+        }
+      } else {
+        chate2ee.joinGroup(channelID, userId, userName);
+      }
+    } else {
+      setIsGroupMode(false);
+      chate2ee.setChannel(channelID, userId);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -132,7 +163,7 @@ const Chat = () => {
       return;
     }
 
-    if (isEmptyMessage(text) && !selectedImg && !voiceClip) {
+    if (isEmptyMessage(text) && !selectedImg && !voiceClip && !selectedFile) {
       alert("Please enter a message or attach media.");
       return;
     }
@@ -146,6 +177,7 @@ const Chat = () => {
       prevMsg.concat({
         body: text,
         image: selectedImg,
+        file: selectedFile,
         audio: voiceClip,
         sender: userId,
         local: true
@@ -171,6 +203,27 @@ const Chat = () => {
     setPreviewImg(false);
     setVoiceClip("");
     setVoiceUploading(false);
+    setSelectedFile(null);
+    setFileUploading(false);
+  };
+
+  const uploadAndSetFile = async (file: File) => {
+    setFileUploading(true);
+    try {
+      const res = await chate2ee.uploadFile(file);
+      if (res?.success && res.file) {
+        setSelectedFile(res.file);
+        // optionally set text to filename
+        setText((prev) => prev || res.file.originalName);
+      } else {
+        alert(res.error || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Upload error', err);
+      alert('Erreur lors de l\'upload');
+    } finally {
+      setFileUploading(false);
+    }
   };
 
   const resetCallState = useCallback(() => {
@@ -211,12 +264,12 @@ const Chat = () => {
     call.on("state-changed", callStateHandlerRef.current);
   }, [resetCallState]);
 
-  const handleSend = useCallback(async (body: string, image: string = "", audio: string = "", index: number) => {
+  const handleSend = useCallback(async (body: string, image: string = "", audio: string = "", index: number, file: any = null) => {
     if (!chate2ee.isEncrypted()) {
       alert("Key not received / No one in chat");
     }
 
-    const { id, timestamp } = await chate2ee.encrypt({ image, audio, text: body }).send();
+    const { id, timestamp } = await chate2ee.encrypt({ image, audio, text: body, file }).send();
 
     setMessages((prevMsg) => {
       const { ...message } = prevMsg[index];
@@ -247,6 +300,10 @@ const Chat = () => {
   };
 
   const validateCallReady = useCallback(() => {
+    if (isGroupMode) {
+      alert("Les appels ne sont pas supportés en mode groupe.");
+      return false;
+    }
     if (!chate2ee.isEncrypted()) {
       alert("No one is in chat!");
       return false;
@@ -257,7 +314,7 @@ const Chat = () => {
       return false;
     }
     return true;
-  }, [usersInChannel, userId]);
+  }, [usersInChannel, userId, isGroupMode]);
 
   const startCall = useCallback(
     async (withVideo: boolean) => {
@@ -319,6 +376,20 @@ const Chat = () => {
     chate2ee.on("call-removed", handleCallRemoved);
   }, [attachCall, resetCallState]);
 
+  const toggleGroupMode = async () => {
+    if (isGroupMode) {
+      // Switch to private mode
+      setIsGroupMode(false);
+      // Reinitialize with private mode
+      await initPublicKey(channelID, false);
+    } else {
+      // Switch to group mode
+      setIsGroupMode(true);
+      // Reinitialize with group mode
+      await initPublicKey(channelID, true);
+    }
+  };
+
   const handleDeleteLink = async () => {
     if (window.confirm("Are you sure you want to delete this chat link? This action cannot be undone.")) {
       setLinkActive(false);
@@ -362,12 +433,31 @@ const Chat = () => {
         getSetUsers();
       });
 
+      // Group event handlers
+      chate2ee.on("on-member-join", (data: any) => {
+        console.log("Member joined:", data);
+        playNotification();
+        getSetUsers();
+      });
+
+      chate2ee.on("on-member-leave", (data: any) => {
+        console.log("Member left:", data);
+        playNotification();
+        getSetUsers();
+      });
+
+      chate2ee.on("member-list-update", (data: any) => {
+        console.log("Member list updated:", data);
+        getSetUsers();
+      });
+
       chate2ee.on(
         "chat-message",
         async (msg: {
           message: string;
           image: string;
           audio?: string;
+          file?: any;
           sender: string;
           id: string;
           timestamp: number;
@@ -377,6 +467,7 @@ const Chat = () => {
             setMessages((prevMsg) =>
               prevMsg.concat({
                 image: msg.image,
+                file: msg.file,
                 audio: msg.audio,
                 body: message,
                 sender: msg.sender,
@@ -404,6 +495,7 @@ const Chat = () => {
       owner: sender === userId,
       body,
       image,
+      file: (messages as any)[i]?.file,
       audio,
       local,
       id,
@@ -571,28 +663,45 @@ const Chat = () => {
                   )}
                 </p>
                 <h2 className="font-bold text-xl leading-tight text-white bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
-                  Secure Chat
+                  {isGroupMode ? "Groupe Chat" : "Secure Chat"}
                 </h2>
                 <div className="flex items-center gap-1.5 text-xs text-white/60">
                   <Lock className="w-3 h-3 text-cyan-400 animate-pulse" style={{ animationDuration: '3s' }} />
                   <span>End-to-end encrypted</span>
+                  {isGroupMode && (
+                    <>
+                      <span className="mx-1">•</span>
+                      <Users className="w-3 h-3 text-cyan-400" />
+                      <span>{usersInChannel.length} membres</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
               <button 
+                onClick={toggleGroupMode} 
+                className={`relative p-2.5 rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400 hover:text-black hover:scale-110 hover:shadow-[0_0_20px_rgba(0,255,255,0.6)] transition-all duration-300 group ${isGroupMode ? 'bg-cyan-400 text-black' : ''}`}
+                title={isGroupMode ? "Mode Groupe" : "Basculer en mode Groupe"}
+              >
+                {isGroupMode ? <Users className="w-5 h-5 relative z-10" /> : <User className="w-5 h-5 relative z-10" />}
+                <div className="absolute inset-0 rounded-full bg-cyan-400/0 group-hover:bg-cyan-400/20 blur-lg transition-all duration-300" />
+              </button>
+              <button 
                 onClick={startAudioCall} 
-                className="relative p-2.5 rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400 hover:text-black hover:scale-110 hover:shadow-[0_0_20px_rgba(0,255,255,0.6)] transition-all duration-300 group"
+                className="relative p-2.5 rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400 hover:text-black hover:scale-110 hover:shadow-[0_0_20px_rgba(0,255,255,0.6)] transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Audio Call"
+                disabled={isGroupMode}
               >
                 <Phone className="w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 rounded-full bg-cyan-400/0 group-hover:bg-cyan-400/20 blur-lg transition-all duration-300" />
               </button>
               <button 
                 onClick={startVideoCall} 
-                className="relative p-2.5 rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400 hover:text-black hover:scale-110 hover:shadow-[0_0_20px_rgba(0,255,255,0.6)] transition-all duration-300 group"
+                className="relative p-2.5 rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400 hover:text-black hover:scale-110 hover:shadow-[0_0_20px_rgba(0,255,255,0.6)] transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Video Call"
+                disabled={isGroupMode}
               >
                 <Video className="w-5 h-5 relative z-10" />
                 <div className="absolute inset-0 rounded-full bg-cyan-400/0 group-hover:bg-cyan-400/20 blur-lg transition-all duration-300" />
@@ -704,6 +813,19 @@ const Chat = () => {
             </div>
             
             <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 relative z-10">
+              {isGroupMode && (
+                <div className="mb-4">
+                  <GroupMembersList
+                    members={usersInChannel.map(u => u.uuid || '').filter(id => id)}
+                    currentUserId={userId}
+                    maxMembers={100}
+                    isOpen={true}
+                    onToggle={() => {}}
+                    darkMode={darkMode}
+                  />
+                </div>
+              )}
+              
               <NewMessageForm
                 handleSubmit={handleSubmit}
                 text={text}
@@ -718,6 +840,11 @@ const Chat = () => {
                 clearVoiceClip={clearVoiceClip}
                 voiceUploading={voiceUploading}
                 setVoiceUploading={setVoiceUploading}
+                selectedFile={selectedFile}
+                setSelectedFile={setSelectedFile}
+                fileUploading={fileUploading}
+                setFileUploading={setFileUploading}
+                onFileChoose={uploadAndSetFile}
               />
             </div>
           </div>

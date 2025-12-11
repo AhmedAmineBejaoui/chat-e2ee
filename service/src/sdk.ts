@@ -4,15 +4,18 @@ import { cryptoUtils as _cryptoUtils } from './cryptoRSA';
 import deleteLink from './deleteLink';
 import getLink from './getLink';
 import getUsersInChannel from './getUsersInChannel';
-import { configType, IChatE2EE, ISendMessageReturn, LinkObjType, TypeUsersInChannel } from './public/types';
+import { configType, IChatE2EE, ISendMessageReturn, LinkObjType, TypeUsersInChannel, IUploadFileResponse, IUploadMultipleResponse, IFileInfo } from './public/types';
 import { getPublicKey, sharePublicKey } from './publicKey';
 import sendMessage from './sendMessage';
 import { SocketInstance, SubscriptionType } from './socket/socket';
 import { Logger } from './utils/logger';
+import { uploadFile, uploadFiles, formatFileSize, getFileCategory } from './uploadFile';
 export { setConfig } from './configContext';
 import { generateUUID } from './utils/uuid';
 import { WebRTCCall, E2ECall, peerConnectionEvents, PeerConnectionEventType, CallOptions } from './webrtc';
 export { IE2ECall } from './webrtc';
+export { formatFileSize, getFileCategory, getSupportedFileTypes, isFileTypeSupported } from './uploadFile';
+export type { IFileInfo, FileCategory, IUploadFileResponse, IUploadMultipleResponse } from './public/types';
 
 export const utils = {
     decryptMessage: (ciphertext: string, privateKey: string) => _cryptoUtils.decryptMessage(ciphertext, privateKey),
@@ -34,9 +37,31 @@ export type chatJoinPayloadType = {
     publicKey: string
 }
 
+export type groupJoinPayloadType = {
+    channelID: string,
+    userID: string,
+    publicKey: string,
+    userName?: string
+}
+
+// Group related types
+export type GroupMemberInfo = {
+    oderId: string,
+    odernName?: string,
+    publicKey?: string
+}
+
+export type MemberListUpdate = {
+    members: string[],
+    count: number
+}
+
 class ChatE2EE implements IChatE2EE {
     private channelId?: string;
     private userId?: string;
+    private userName?: string;
+    private isGroupMode = false;
+    private groupMembers: string[] = [];
 
     private privateKey?: string;
     private publicKey?: string;
@@ -89,6 +114,24 @@ class ChatE2EE implements IChatE2EE {
             evetLogger.log("Receiver disconnected");
             this.receiverPublicKey = null;
             this.symEncryption.clearRemoteKey();
+        });
+
+        // Group event handlers
+        this.on("on-member-join", (data: GroupMemberInfo) => {
+            evetLogger.log(`Member joined: ${data.oderId}`);
+            if (!this.groupMembers.includes(data.oderId)) {
+                this.groupMembers.push(data.oderId);
+            }
+        });
+
+        this.on("on-member-leave", (data: { oderId: string }) => {
+            evetLogger.log(`Member left: ${data.oderId}`);
+            this.groupMembers = this.groupMembers.filter(id => id !== data.oderId);
+        });
+
+        this.on("member-list-update", (data: MemberListUpdate) => {
+            evetLogger.log(`Member list updated: ${data.count} members`);
+            this.groupMembers = data.members.filter(id => id !== this.userId);
         });
 
         /**
@@ -148,6 +191,8 @@ class ChatE2EE implements IChatE2EE {
         logger.log(`setChannel(), ${JSON.stringify({ channelId, userId,userName })}`);
         this.channelId = channelId;
         this.userId = userId;
+        this.userName = userName;
+        this.isGroupMode = false;
 
         const aesPlain = await this.symEncryption.getRawAesKeyToExport();
 
@@ -155,6 +200,45 @@ class ChatE2EE implements IChatE2EE {
         this.socket.joinChat({ publicKey: this.publicKey, userID: this.userId, channelID: this.channelId})
         await this.getPublicKey(logger);
         return;
+    }
+
+    /**
+     * Join a group channel (up to 100 members)
+     */
+    public async joinGroup(channelId: string, userId: string, userName?: string): Promise<void> {
+        this.checkInitialized();
+        logger.log(`joinGroup(), ${JSON.stringify({ channelId, userId, userName })}`);
+        this.channelId = channelId;
+        this.userId = userId;
+        this.userName = userName;
+        this.isGroupMode = true;
+
+        const aesPlain = await this.symEncryption.getRawAesKeyToExport();
+
+        await sharePublicKey({ aesKey: aesPlain, publicKey: this.publicKey, sender: this.userId, channelId: this.channelId });
+        this.socket.joinGroup({ publicKey: this.publicKey, userID: this.userId, channelID: this.channelId, userName });
+        return;
+    }
+
+    /**
+     * Check if currently in group mode
+     */
+    public isInGroupMode(): boolean {
+        return this.isGroupMode;
+    }
+
+    /**
+     * Get list of group members (excluding self)
+     */
+    public getGroupMembers(): string[] {
+        return [...this.groupMembers];
+    }
+
+    /**
+     * Get count of group members (including self)
+     */
+    public getGroupMemberCount(): number {
+        return this.groupMembers.length + 1; // +1 for self
     }
 
     public isEncrypted(): boolean {
@@ -176,13 +260,13 @@ class ChatE2EE implements IChatE2EE {
         return getUsersInChannel({ channelID: this.channelId });
     }
 
-    public async sendMessage({ image, audio, text }): Promise<ISendMessageReturn> {
+    public async sendMessage({ image, audio, text, file }): Promise<ISendMessageReturn> {
         logger.log(`sendMessage()`);
         this.checkInitialized();
-        return sendMessage({ channelID: this.channelId, userId: this.userId, image, audio, text })
+        return sendMessage({ channelID: this.channelId, userId: this.userId, image, audio, text, file })
     }
 
-    public encrypt({ image, audio, text }: { image?: string; audio?: string; text: string }): { send: () => Promise<ISendMessageReturn> } {
+    public encrypt({ image, audio, text, file }: { image?: string; audio?: string; text: string; file?: IFileInfo }): { send: () => Promise<ISendMessageReturn> } {
         logger.log(`encrypt()`);
         this.checkInitialized();
 
@@ -190,9 +274,27 @@ class ChatE2EE implements IChatE2EE {
         return ({
             send: async () => {
                 const encryptedText = await encryptedTextPromise;
-                return this.sendMessage({ image, audio, text: encryptedText })
+                return this.sendMessage({ image, audio, text: encryptedText, file })
             }
         })
+    }
+
+    /**
+     * Upload a single file to the server
+     */
+    public async uploadFile(file: File): Promise<IUploadFileResponse> {
+        logger.log(`uploadFile(): ${file.name}`);
+        this.checkInitialized();
+        return uploadFile(file);
+    }
+
+    /**
+     * Upload multiple files (max 10)
+     */
+    public async uploadFiles(files: File[]): Promise<IUploadMultipleResponse> {
+        logger.log(`uploadFiles(): ${files.length} files`);
+        this.checkInitialized();
+        return uploadFiles(files);
     }
 
     public async decryptMessage(ciphertext: string): Promise<string> {
