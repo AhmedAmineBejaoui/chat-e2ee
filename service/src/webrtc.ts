@@ -12,6 +12,7 @@ export interface IE2ECall {
     mode: CallMode;
     toggleAudio(enabled: boolean): void;
     toggleVideo(enabled: boolean): void;
+    ensureLocalMedia?(withVideo?: boolean): Promise<void>;
 }
 
 interface SignalData {
@@ -66,6 +67,12 @@ export class WebRTCCall {
         this.logger.log('startCall');
         this.currentMode = options.withVideo ? 'video' : 'audio';
         return this.peer.createAndSendOffer(options);
+    }
+
+    // Ensure local media (getUserMedia) is acquired. Useful for callers who want to
+    // request camera/mic explicitly (for example, when user accepts an incoming call).
+    public async ensureLocalMedia(withVideo: boolean = false): Promise<void> {
+        return this.peer.ensureLocalStream({ withVideo });
     }
 
     public endCall(): void {
@@ -259,7 +266,7 @@ class Peer {
         this.pc = null;
     }
     
-    private async ensureLocalStream(options: CallOptions = {}): Promise<void> {
+    public async ensureLocalStream(options: CallOptions = {}): Promise<void> {
         if (this.localStreamPromise) {
             return this.localStreamPromise;
         }
@@ -275,7 +282,8 @@ class Peer {
             audio: {
                 echoCancellation: true,
                 noiseSuppression: true,
-                autoGainControl: true
+                // disable autoGainControl to avoid aggressive automatic gain that can reduce perceived volume
+                autoGainControl: false
             },
             video: withVideo ? { facingMode: 'user' } : false
         });
@@ -433,5 +441,8 @@ export class E2ECall implements IE2ECall {
     }
     public toggleVideo(enabled: boolean): void {
         this.webRtcCall.toggleVideo(enabled);
+    }
+    public async ensureLocalMedia(withVideo: boolean = false): Promise<void> {
+        return this.webRtcCall.ensureLocalMedia(withVideo);
     }
 }

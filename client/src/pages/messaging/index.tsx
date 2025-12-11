@@ -422,10 +422,17 @@ const Chat = () => {
     stopRingtone();
     setIncomingCall(false);
     // Ensure media is active for the callee
-    callRef.current?.toggleAudio(true);
-    if (callRef.current?.mode === "video") {
-      callRef.current.toggleVideo(true);
-    }
+    (async () => {
+      try {
+        await callRef.current?.ensureLocalMedia?.(callRef.current?.mode === "video");
+      } catch (err) {
+        console.warn('[Call] ensureLocalMedia failed:', err);
+      }
+      callRef.current?.toggleAudio(true);
+      if (callRef.current?.mode === "video") {
+        callRef.current.toggleVideo(true);
+      }
+    })();
   }, [stopRingtone]);
 
   useEffect(() => {
