@@ -150,8 +150,20 @@ const Chat = () => {
         chate2ee.joinGroup(channelID, userId, userName);
       }
     } else {
-      setIsGroupMode(false);
-      chate2ee.setChannel(channelID, userId);
+      // Default to group mode and ask for name
+      setIsGroupMode(true);
+      if (!userName) {
+        const name = prompt("Entrez votre nom pour rejoindre la conversation:", `User${Math.floor(Math.random() * 1000)}`);
+        if (name) {
+          setUserName(name);
+          chate2ee.joinGroup(channelID, userId, name);
+        } else {
+          setUserName(`User${Math.floor(Math.random() * 1000)}`);
+          chate2ee.joinGroup(channelID, userId, `User${Math.floor(Math.random() * 1000)}`);
+        }
+      } else {
+        chate2ee.joinGroup(channelID, userId, userName);
+      }
     }
   };
 
