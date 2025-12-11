@@ -92,20 +92,26 @@ const Chat = () => {
   };
 
   const playRingtone = () => {
+    console.log('[Ringtone] Attempting to play ringtone');
     if (!ringtoneAudioRef.current) {
       ringtoneAudioRef.current = new Audio(ringtoneAudio);
       ringtoneAudioRef.current.loop = true;
-      ringtoneAudioRef.current.volume = 0.5;
+      ringtoneAudioRef.current.volume = 0.7; // Increased volume from 0.5 to 0.7
+      console.log('[Ringtone] Audio element created');
     }
     
     setIsRinging(true);
-    ringtoneAudioRef.current.play().catch(err => console.error('Ringtone play error:', err));
+    ringtoneAudioRef.current.play()
+      .then(() => console.log('[Ringtone] Playing successfully'))
+      .catch(err => console.error('[Ringtone] Play error:', err));
   };
 
   const stopRingtone = () => {
+    console.log('[Ringtone] Stopping ringtone');
     if (ringtoneAudioRef.current) {
       ringtoneAudioRef.current.pause();
       ringtoneAudioRef.current.currentTime = 0;
+      console.log('[Ringtone] Stopped and reset');
     }
     setIsRinging(false);
   };
@@ -254,21 +260,27 @@ const Chat = () => {
     setActiveCallMode(call.mode);
     setCallState(call.state);
     
-    // Play ringtone if call is in connecting state
+    // Play ringtone if call is in new or connecting state
+    console.log('[Call] Attaching call with state:', call.state);
     if (call.state === "new" || call.state === "connecting") {
+      console.log('[Call] Playing ringtone for state:', call.state);
       playRingtone();
     }
     
     if (!callStateHandlerRef.current) {
       callStateHandlerRef.current = (state: RTCPeerConnectionState) => {
+        console.log('[Call] State changed to:', state);
         setCallState(state);
         
-        // Stop ringtone when call is connected or ended
+        // Stop ringtone when call is connected, closed, or failed
         if (state === "connected") {
+          console.log('[Call] Connected - stopping ringtone');
           stopRingtone();
         }
         
         if (state === "closed" || state === "disconnected" || state === "failed") {
+          console.log('[Call] Call ended - stopping ringtone and resetting');
+          stopRingtone();
           resetCallState();
         }
       };
@@ -361,10 +373,14 @@ const Chat = () => {
         resetCallState();
       }
       try {
+        console.log('[Call] Starting call with video:', withVideo);
         playRingtone();
+        console.log('[Call] Ringtone started for outgoing call');
         const call = await chate2ee.startCall({ withVideo });
+        console.log('[Call] Call created successfully');
         attachCall(call);
       } catch (err: any) {
+        console.error('[Call] Error starting call:', err);
         stopRingtone();
         console.error(err);
         if (err?.message?.toLowerCase().includes("call already active")) {
@@ -394,6 +410,9 @@ const Chat = () => {
 
   useEffect(() => {
     const handleCallAdded = (call: IE2ECall) => {
+      // Play ringtone when receiving an incoming call
+      console.log('[Call] Incoming call received, playing ringtone');
+      playRingtone();
       attachCall(call);
     };
     const handleCallRemoved = () => {
