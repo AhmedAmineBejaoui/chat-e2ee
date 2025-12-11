@@ -901,6 +901,16 @@ const Chat = () => {
             callState={callState}
             onEndCall={endActiveCall}
             darkMode={darkMode}
+            onToggleMute={(muted) => {
+              if (callRef.current) {
+                callRef.current.toggleAudio(!muted);
+              }
+            }}
+            onToggleVideo={(videoOff) => {
+              if (callRef.current) {
+                callRef.current.toggleVideo(!videoOff);
+              }
+            }}
           />
         </div>
       </div>

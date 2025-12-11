@@ -1,0 +1,32 @@
+services:
+  # Web Service - Backend + Frontend
+  - type: web
+    name: chat-e2ee
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MAX_JSON_PAYLOAD
+        value: 25mb
+      - key: SOCKET_MAX_PAYLOAD_BYTES
+        value: 5242880
+      - key: ENFORCE_HTTPS
+        value: true
+      - key: HSTS_MAX_AGE
+        value: 31536000
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 60000
+      - key: RATE_LIMIT_MAX
+        value: 120
+      # These will be set via Render Dashboard for security:
+      # - CLIENT_ORIGIN (e.g., https://chat-e2ee.onrender.com)
+      # - CHAT_LINK_DOMAIN (e.g., https://chat-e2ee.onrender.com)
+      # - PUBLIC_SERVER_URL (e.g., https://chat-e2ee.onrender.com)
+      # - MONGO_URI (optional - MongoDB connection string)
+    healthCheckPath: /
+    autoDeploy: true

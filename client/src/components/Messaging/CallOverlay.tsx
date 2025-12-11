@@ -7,9 +7,11 @@ type CallOverlayProps = {
   callState?: RTCPeerConnectionState | null;
   onEndCall: () => void;
   darkMode: boolean;
+  onToggleMute?: (muted: boolean) => void;
+  onToggleVideo?: (videoOff: boolean) => void;
 };
 
-const CallOverlay = ({ mode, callState, onEndCall, darkMode }: CallOverlayProps) => {
+const CallOverlay = ({ mode, callState, onEndCall, darkMode, onToggleMute, onToggleVideo }: CallOverlayProps) => {
   const hidden = !mode;
   const getLabel = () => {
     if (mode === "video") return "Video Call";
@@ -58,13 +60,15 @@ const CallOverlay = ({ mode, callState, onEndCall, darkMode }: CallOverlayProps)
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
-    // TODO: Actually mute the microphone
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    onToggleMute?.(newMutedState);
   };
 
   const toggleVideo = () => {
-    setIsVideoOff(!isVideoOff);
-    // TODO: Actually toggle video
+    const newVideoOffState = !isVideoOff;
+    setIsVideoOff(newVideoOffState);
+    onToggleVideo?.(newVideoOffState);
   };
 
   return (

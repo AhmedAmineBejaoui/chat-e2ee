@@ -134,6 +134,32 @@ Example:
 
 ---
 
+### 🚀 Deployment
+
+The application can be deployed to multiple platforms:
+
+#### Deploy to Render (Recommended - Full Stack)
+1. Push code to GitHub
+2. Create new Web Service on [Render](https://render.com)
+3. Connect your repository
+4. Set environment variables (see [DEPLOYMENT.md](./DEPLOYMENT.md))
+5. Deploy automatically using `render.yaml`
+
+#### Deploy to Firebase (Static Hosting)
+```bash
+# Build and deploy
+npm run build-client
+firebase deploy --only hosting
+
+# Or use the deployment script
+./deploy-firebase.bat  # Windows
+./deploy-firebase.sh   # Linux/Mac
+```
+
+For detailed deployment instructions, see **[DEPLOYMENT.md](./DEPLOYMENT.md)**
+
+---
+
 ## ✨ Contributors
 
  <img src="https://contributors-img.web.app/image?repo=muke1908/chat-e2ee" />

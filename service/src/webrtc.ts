@@ -10,6 +10,8 @@ export interface IE2ECall {
     state: RTCPeerConnectionState;
     endCall(): Promise<void>;
     mode: CallMode;
+    toggleAudio(enabled: boolean): void;
+    toggleVideo(enabled: boolean): void;
 }
 
 interface SignalData {
@@ -71,6 +73,16 @@ export class WebRTCCall {
         this.subs.clear();
         this.peer?.dispose();
         this.peer = null;
+    }
+
+    public toggleAudio(enabled: boolean): void {
+        this.logger.log(`toggleAudio: ${enabled}`);
+        this.peer?.toggleAudio(enabled);
+    }
+
+    public toggleVideo(enabled: boolean): void {
+        this.logger.log(`toggleVideo: ${enabled}`);
+        this.peer?.toggleVideo(enabled);
     }
 
     private descriptionContainsVideo(desc: SignalData): boolean {
@@ -206,6 +218,27 @@ class Peer {
             this.logger.log('Signal, candidate');
             const candidate = new RTCIceCandidate((data as any).candidate);
             this.pc.addIceCandidate(candidate).catch(e => console.error('Error adding ICE candidate:', e));
+        }
+    }
+
+    public toggleAudio(enabled: boolean): void {
+        if (!this.localStream) return;
+        const audioTracks = this.localStream.getAudioTracks();
+        audioTracks.forEach(track => {
+            track.enabled = enabled;
+            this.logger.log(`Audio track ${enabled ? 'enabled' : 'disabled'}`);
+        });
+    }
+
+    public toggleVideo(enabled: boolean): void {
+        if (!this.localStream) return;
+        const videoTracks = this.localStream.getVideoTracks();
+        videoTracks.forEach(track => {
+            track.enabled = enabled;
+            this.logger.log(`Video track ${enabled ? 'enabled' : 'disabled'}`);
+        });
+        if (this.localVideoEl) {
+            this.localVideoEl.style.opacity = enabled ? '1' : '0.3';
         }
     }
 
@@ -387,5 +420,11 @@ export class E2ECall implements IE2ECall {
     }
     public async endCall(): Promise<void> {
         return this.webRtcCall.endCall();
+    }
+    public toggleAudio(enabled: boolean): void {
+        this.webRtcCall.toggleAudio(enabled);
+    }
+    public toggleVideo(enabled: boolean): void {
+        this.webRtcCall.toggleVideo(enabled);
     }
 }
