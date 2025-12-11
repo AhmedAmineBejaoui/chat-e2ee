@@ -271,7 +271,14 @@ class Peer {
 
     private async acquireLocalStream(withVideo: boolean): Promise<void> {
         this.logger.log(`acquireLocalStream, video: ${withVideo}`);
-        this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: withVideo });
+        this.localStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            },
+            video: withVideo ? { facingMode: 'user' } : false
+        });
         this.localStream.getTracks().forEach(track => {
             this.logger.log(`Adding local track: ${track.kind}`);
             this.pc.addTrack(track, this.localStream);

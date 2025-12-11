@@ -279,6 +279,11 @@ const Chat = () => {
           console.log('[Call] Connected - stopping ringtone');
           setIncomingCall(false);
           stopRingtone();
+          // Make sure local media is active on connect
+          callRef.current?.toggleAudio(true);
+          if (callRef.current?.mode === "video") {
+            callRef.current.toggleVideo(true);
+          }
         }
         
         if (state === "closed" || state === "disconnected" || state === "failed") {
@@ -416,6 +421,11 @@ const Chat = () => {
   const acceptIncomingCall = useCallback(() => {
     stopRingtone();
     setIncomingCall(false);
+    // Ensure media is active for the callee
+    callRef.current?.toggleAudio(true);
+    if (callRef.current?.mode === "video") {
+      callRef.current.toggleVideo(true);
+    }
   }, [stopRingtone]);
 
   useEffect(() => {
