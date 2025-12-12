@@ -702,7 +702,7 @@ const Chat = () => {
 
         <div className="relative z-10 flex flex-col min-h-screen">
           {/* Header */}
-          <header className="w-full max-w-6xl mx-auto flex items-center justify-between gap-4 px-4 sm:px-6 pt-8 pb-6 border-b border-cyan-400/20 backdrop-blur-sm bg-gradient-to-r from-blue-900/20 via-cyan-900/10 to-blue-900/20 relative">
+          <header className="w-full max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 sm:px-6 pt-6 sm:pt-8 pb-4 sm:pb-6 border-b border-cyan-400/20 backdrop-blur-sm bg-gradient-to-r from-blue-900/20 via-cyan-900/10 to-blue-900/20 relative">
             {/* Animated border glow effect */}
             <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50">
               <div className="h-full w-1/3 bg-cyan-400 blur-sm animate-pulse" 
@@ -754,7 +754,7 @@ const Chat = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-3 sm:mt-0">
               <button 
                 onClick={toggleGroupMode} 
                 className={`relative p-2.5 rounded-full border-2 border-cyan-400/50 bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400 hover:text-black hover:scale-110 hover:shadow-[0_0_20px_rgba(0,255,255,0.6)] transition-all duration-300 group ${isGroupMode ? 'bg-cyan-400 text-black' : ''}`}

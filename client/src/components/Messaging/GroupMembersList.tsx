@@ -25,7 +25,7 @@ const GroupMembersList: React.FC<GroupMembersListProps> = ({
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${
+        className={`flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-all text-sm ${
           darkMode
             ? 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400'
             : 'bg-cyan-100 hover:bg-cyan-200 text-cyan-700'
@@ -38,11 +38,12 @@ const GroupMembersList: React.FC<GroupMembersListProps> = ({
       {/* Members Panel */}
       {isOpen && (
         <div
-          className={`absolute right-0 top-12 w-72 max-h-96 overflow-y-auto rounded-2xl shadow-2xl z-50 ${
+          className={`fixed inset-x-0 bottom-0 h-56 sm:relative sm:inset-auto sm:top-12 sm:right-0 sm:w-72 sm:h-auto max-h-96 overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl z-50 ${
             darkMode
-              ? 'bg-slate-900/95 border border-cyan-500/30'
-              : 'bg-white/95 border border-cyan-200'
+              ? 'bg-slate-900/95 border-t border-cyan-500/30 sm:border sm:border-cyan-500/30'
+              : 'bg-white/95 border-t border-cyan-200 sm:border sm:border-cyan-200'
           } backdrop-blur-xl`}
+          role="dialog"
         >
           <div className={`sticky top-0 px-4 py-3 border-b ${
             darkMode ? 'border-cyan-500/20 bg-slate-900/95' : 'border-cyan-100 bg-white/95'
@@ -55,19 +56,23 @@ const GroupMembersList: React.FC<GroupMembersListProps> = ({
             </h3>
           </div>
           
-          <div className="p-2">
-            {allMembers.map((memberId, index) => {
+          <div className="p-2 sm:p-2">
+            <div className="sm:block flex gap-2 overflow-x-auto px-1 py-1">
+              {allMembers.map((memberId, index) => {
               const isCurrentUser = memberId === currentUserId;
               const isFirst = index === 0;
               
               return (
                 <div
                   key={memberId}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
+                  className={`flex sm:flex-row flex-col items-center sm:items-center gap-3 sm:gap-3 px-3 py-2 min-w-[88px] sm:min-w-0 rounded-xl transition-colors ${
                     darkMode
                       ? 'hover:bg-cyan-500/10'
                       : 'hover:bg-cyan-50'
                   }`}
+                  style={{
+                    flex: '0 0 auto'
+                  }}
                 >
                   {/* Avatar */}
                   <div
@@ -87,7 +92,7 @@ const GroupMembersList: React.FC<GroupMembersListProps> = ({
                   </div>
 
                   {/* Info */}
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 text-center sm:text-left">
                     <p className={`text-sm font-medium truncate ${
                       darkMode ? 'text-white' : 'text-slate-800'
                     }`}>
@@ -123,6 +128,7 @@ const GroupMembersList: React.FC<GroupMembersListProps> = ({
                 </div>
               );
             })}
+            </div>
           </div>
 
           {/* Footer */}

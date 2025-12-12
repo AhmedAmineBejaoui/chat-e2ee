@@ -122,15 +122,6 @@ const LandingPage = () => {
                 >
                   {loading ? "Creating..." : "Get Started"}
                 </button>
-                
-                <a
-                  href="https://github.com/muke1908/chat-e2ee"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-transparent border-2 border-white/30 text-white font-semibold uppercase text-sm tracking-wider hover:border-cyan-400 hover:text-cyan-400 transition-all duration-300 no-underline"
-                >
-                  View Source
-                </a>
               </div>
             </div>
 

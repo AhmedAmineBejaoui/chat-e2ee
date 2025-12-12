@@ -193,14 +193,14 @@ export const NewMessageForm = ({
   }, []);
 
   return (
-    <form className="space-y-3" onSubmit={handleSubmit}>
+    <form className="space-y-3 px-3 md:px-0" onSubmit={handleSubmit}>
       {emojiVisibility && !detectMobile() && (
         <div className="rounded-xl border border-holo-border/70 bg-holo-panel/80 p-2 shadow-holo-soft mb-2 backdrop-blur">
           <EmojiRow text={text} setText={setText} />
         </div>
       )}
-      <div className="flex items-center gap-3">
-        <div className="flex-1 flex items-center gap-3 rounded-full border border-holo-border/70 bg-black/50 px-4 py-2.5 shadow-[0_16px_42px_rgba(0,0,0,0.55)] backdrop-blur focus-within:border-holo-cyan/70 focus-within:shadow-[0_0_0_1px_rgba(0,201,213,0.55)] transition-all">
+      <div className="flex items-center gap-2 sm:gap-3 w-full">
+        <div className="flex-1 flex items-center gap-2 sm:gap-3 rounded-full border border-holo-border/70 bg-black/50 px-3 sm:px-4 py-2.5 shadow-[0_16px_42px_rgba(0,0,0,0.55)] backdrop-blur focus-within:border-holo-cyan/70 focus-within:shadow-[0_0_0_1px_rgba(0,201,213,0.55)] transition-all min-h-[44px]">
           <button
             onClick={() => setEmojiVisibility((prev) => !prev)}
             type="button"
@@ -250,22 +250,22 @@ export const NewMessageForm = ({
 
         <button
           type="button"
-          className={`p-3 rounded-full transition-all duration-200 ${
+          className={`p-2 sm:p-3 rounded-full transition-all duration-200 ${
             isRecording
               ? "bg-red-500 text-white animate-pulse shadow-[0_12px_32px_rgba(248,113,113,0.35)]"
               : "bg-black/45 border border-holo-border/70 text-holo-text-secondary hover:text-holo-cyan hover:border-holo-cyan/70 shadow-[0_14px_32px_rgba(0,0,0,0.45)]"
           }`}
           onClick={toggleRecording}
         >
-          {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
         </button>
 
         <button
           type="submit"
-          className="w-12 h-12 rounded-2xl bg-holo-cyan text-[#04262d] shadow-[0_18px_55px_rgba(0,201,213,0.35)] hover:shadow-[0_22px_65px_rgba(0,201,213,0.45)] hover:scale-[1.03] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-holo-cyan text-[#04262d] shadow-[0_14px_44px_rgba(0,201,213,0.28)] hover:shadow-[0_18px_55px_rgba(0,201,213,0.35)] hover:scale-[1.03] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           disabled={!text && !selectedImg && !voiceClip}
         >
-          <Send className="w-5 h-5 ml-0.5" />
+          <Send className="w-4 h-4 sm:w-5 sm:h-5 ml-0" />
         </button>
       </div>
 

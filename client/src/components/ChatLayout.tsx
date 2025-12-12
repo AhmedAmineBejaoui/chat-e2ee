@@ -125,27 +125,33 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
 
   return (
     <div
-      className={`flex h-screen bg-holo-radial text-holo-text-primary`}
+      className={`flex flex-col sm:flex-row h-screen bg-holo-radial text-holo-text-primary`}
     >
       {/* Sidebar */}
       <div
-        className={`w-80 flex flex-col border-r border-holo-border-soft/80 bg-slate-950/60 backdrop-blur-xl shadow-holo-card`}
+        className={`w-full sm:w-80 flex flex-col border-r border-holo-border-soft/80 bg-slate-950/60 backdrop-blur-xl shadow-holo-card`}
       >
         {/* Header */}
         <div
           className={`p-4 border-b border-holo-border-soft/80`}
         >
-          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-semibold tracking-tight bg-gradient-to-r from-sky-300 to-cyan-300 bg-clip-text text-transparent">
               Messages
             </h1>
             <div className="flex gap-2">
-              <button
-                className={`p-2 rounded-2xl bg-slate-900/80 border border-holo-border-soft/80 hover:border-holo-cyan/60 hover:bg-slate-900/60 transition-colors`}
-              >
-                <Plus size={20} />
-              </button>
-              <ThemeToggle />
+              <div className="hidden sm:flex gap-2">
+                <button
+                  className={`p-2 rounded-2xl bg-slate-900/80 border border-holo-border-soft/80 hover:border-holo-cyan/60 hover:bg-slate-900/60 transition-colors`}
+                >
+                  <Plus size={20} />
+                </button>
+                <ThemeToggle />
+              </div>
+              {/* compact controls for small screens */}
+              <div className="flex sm:hidden items-center gap-2">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
 
@@ -222,7 +228,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
         {/* Chat Header */}
         {currentChat && (
           <div
-            className={`px-6 py-4 border-b border-holo-border-soft/80 flex items-center justify-between bg-slate-950/60`}
+            className={`px-4 sm:px-6 py-3 sm:py-4 border-b border-holo-border-soft/80 flex items-center justify-between bg-slate-950/60`}
           >
             <div className="flex items-center gap-4">
               <div
@@ -240,27 +246,33 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
               </div>
             </div>
             <div className="flex gap-2">
-              <button
-                className={`p-2 rounded-2xl bg-slate-900/80 border border-holo-border-soft/80 hover:border-holo-cyan/60 hover:bg-slate-900/60 text-slate-300 transition-colors`}
-              >
-                <Phone size={20} />
-              </button>
-              <button
-                className={`p-2 rounded-2xl bg-slate-900/80 border border-holo-border-soft/80 hover:border-holo-cyan/60 hover:bg-slate-900/60 text-slate-300 transition-colors`}
-              >
-                <Video size={20} />
-              </button>
-              <button
-                className={`p-2 rounded-2xl bg-slate-900/80 border border-holo-border-soft/80 hover:border-holo-cyan/60 hover:bg-slate-900/60 text-slate-300 transition-colors`}
-              >
-                <MoreVertical size={20} />
-              </button>
+              <div className="hidden sm:flex gap-2">
+                <button
+                  className={`p-2 rounded-2xl bg-slate-900/80 border border-holo-border-soft/80 hover:border-holo-cyan/60 hover:bg-slate-900/60 text-slate-300 transition-colors`}
+                >
+                  <Phone size={20} />
+                </button>
+                <button
+                  className={`p-2 rounded-2xl bg-slate-900/80 border border-holo-border-soft/80 hover:border-holo-cyan/60 hover:bg-slate-900/60 text-slate-300 transition-colors`}
+                >
+                  <Video size={20} />
+                </button>
+                <button
+                  className={`p-2 rounded-2xl bg-slate-900/80 border border-holo-border-soft/80 hover:border-holo-cyan/60 hover:bg-slate-900/60 text-slate-300 transition-colors`}
+                >
+                  <MoreVertical size={20} />
+                </button>
+              </div>
+              {/* compact menu for mobile: show a more icon only */}
+              <div className="sm:hidden">
+                <button className={`p-2 rounded-2xl bg-slate-900/80 border border-holo-border-soft/80 text-slate-300`}> <MoreVertical size={18} /> </button>
+              </div>
             </div>
           </div>
         )}
 
         {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 bg-gradient-to-b from-slate-900/40 via-slate-950/60 to-black/80">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-4 bg-gradient-to-b from-slate-900/40 via-slate-950/60 to-black/80">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -291,7 +303,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
 
         {/* Input Area */}
         <div
-          className={`px-6 pb-5 pt-3 border-t border-holo-border-soft/80 bg-black/60 backdrop-blur-xl`}
+          className={`px-4 sm:px-6 pb-4 sm:pb-5 pt-3 border-t border-holo-border-soft/80 bg-black/60 backdrop-blur-xl`}
         >
           <div
             className={`flex gap-3 items-end p-3 rounded-3xl bg-slate-950/70 border border-holo-border-soft/80 focus-within:border-holo-cyan/70 transition-colors`}
